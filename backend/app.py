@@ -1,108 +1,222 @@
-from flask import Flask, request, jsonify, session, redirect
+import json
+
 import requests
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_session import Session  # NEW: For persistent sessions
-import redis
+import cloudinary
+import cloudinary.uploader
+from PyPDF2 import PdfReader
 
-from supabase import create_client, Client
 
-# Supabase URL and API Key
-SUPABASE_URL = 'https://voenczphlgojgihwbcwi.supabase.co'
-SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZW5jenBobGdvamdpaHdiY3dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2MDM0NzgsImV4cCI6MjA1NTE3OTQ3OH0.WASlZSz_mSEyxlDZxDhUWZOdQp9JG0n7IHvE0Y8Mo6Y'
+cloudinary.config(
+    cloud_name = "dnc2tvpnn",
+    api_key = "858953854634624",
+    api_secret = "TU9T5WejPg4qe4LUniIqXQuFTN8",
+    secure=True
+)
 
-# Initialize Supabase client
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# http://127.0.0.1:5000/linkedin-openid/callback
 app = Flask(__name__)
-print(Session)
+CORS(app)
+
+COHERE_API_KEY = 'mwsy5HzGiJGheLAxKNObW529C9deFV6RhbIF7RGU'
+COHERE_API_URL = 'https://api.cohere.ai/v1/generate'
+
+API_KEY = 'iBSdCFmG4HjCwYhtcNHUR913W3bBFVaw'
+URL_ENDPOINT = 'https://api.apilayer.com/resume_parser/url'
+
+@app.route('/parse-resume', methods=['POST'])
+def parse_resume():
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'Empty file name'}), 400
+
+    try:
+        reader = PdfReader(file)
+        extracted_text = ""
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                extracted_text += page_text + "\n"
+
+        if not extracted_text.strip():
+            return jsonify({'error': 'Could not extract text from the resume'}), 400
 
 
+        prompt = f""" You are a resume parsing assistant. Extract the following information from the resume provided, 
+        and include any projects under "work_experience".: - Full Name - Email - Phone Number - Summary - Work 
+        Experience (for each: company name, title, dates, responsibilities) - Education (for each: institution, 
+        degree, dates) - Skills
+        
+        Return ONLY the information in valid JSON format with keys: "name", "email", "phone", "summary", "work_experience", "education", "skills".
 
-app.config['SECRET_KEY'] = 'WPL_AP1.vFgMgRskVtKfk2hP.RcATFw=='
-app.config['SESSION_TYPE'] = 'redis'  # Use Redis for session storage
-app.config['SESSION_PERMANENT'] = False
-app.config['SESSION_USE_SIGNER'] = True
-app.config['SESSION_REDIS'] = redis.StrictRedis(host='localhost', port=6379, db=0)
-Session(app)  # Initialize Flask-Session
+        Resume Text:
+        {extracted_text}
+        """
 
-app.secret_key = 'WPL_AP1.vFgMgRskVtKfk2hP.RcATFw=='  # Keep this safe
-CLIENT_ID = '778z82h4dtgrrz'
-CLIENT_SECRET = 'WPL_AP1.vFgMgRskVtKfk2hP.RcATFw=='
-REDIRECT_URI = 'http%3A%2F%2F127.0.0.1%3A5000%2Flinkedin-openid%2Fcallback'  # No spaces
-BACKEND_REDIRECT_URI = 'http://127.0.0.1:5000/linkedin-openid/callback'  # Backend receives code
-FRONTEND_REDIRECT_URI = 'http://localhost:3000/'  # Where the user will go after login
-
-CORS(app, origins='http://localhost:3000', supports_credentials=True)  # Make sure frontend is allowed
-
-@app.route('/linkedin-openid/callback')
-def linkedin_callback():
-    code = request.args.get('code')
-    print(code)
-    if not code:
-        return jsonify({"error": "No authorization code provided"}), 400
-
-    token_url = 'https://www.linkedin.com/oauth/v2/accessToken'
-    data = {
-        'grant_type': 'authorization_code',
-        'code': code,
-        'redirect_uri': 'http://127.0.0.1:5000/linkedin-openid/callback',
-        'client_id': CLIENT_ID,
-        'client_secret': CLIENT_SECRET
-    }
-    print(data)
-    response = requests.post(token_url, data=data, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-    if response.status_code == 200:
-        access_token = response.json().get('access_token')
-        session['access_token'] = access_token  # Store in session
-        print(f"Stored access token in session: {session.get('access_token')}")  # Debug print
-
-        # Now store access token in Supabase
-        user_data = {
-            "access_token": access_token
+        headers = {
+            'Authorization': f'Bearer {COHERE_API_KEY}',
+            'Content-Type': 'application/json'
         }
-        # Assuming your table is named "users" with columns id, created_at, access_token
-        supabase.table("User").insert([user_data]).execute()
+        payload = {
+            'model': 'command-xlarge-nightly',
+            'prompt': prompt,
+            'max_tokens': 1500,
+            'temperature': 0.3
+        }
 
-        # Redirect user to frontend after login
-        return redirect(f"{FRONTEND_REDIRECT_URI}?success=true")
-    else:
-        return redirect(f"{FRONTEND_REDIRECT_URI}?error=failed_to_authenticate")
+        response = requests.post(COHERE_API_URL, json=payload, headers=headers)
+        response_data = response.json()
 
-@app.route('/linkedin-openid/token')
-def get_access_token():
-    access_token = session.get('access_token')
-    if not access_token:
-        return jsonify({"error": "No access token found"}), 400
-    return jsonify({"access_token": access_token})
+        generated_text = response_data.get('generations', [{}])[0].get('text', '')
 
-@app.route('/linkedin-openid/profile')
-def linkedin_profile():
-    print("HERE")
-    access_token = session.get('access_token')
-    print(access_token)
-    if not access_token:
-        return jsonify({"error": "No access token found"}), 400
 
-    # LinkedIn API URL to get the user's profile
-    profile_url = 'https://api.linkedin.com/v2/me'
+        try:
+            if isinstance(generated_text, str) and generated_text.strip().startswith('{'):
+                parsed_resume = json.loads(generated_text)
+            else:
+                raise json.JSONDecodeError("Invalid JSON format", generated_text, 0)
+        except json.JSONDecodeError:
+            parsed_resume = generated_text
+
+
+
+        return jsonify({'experiences': parsed_resume})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/generate-roadmap', methods=['POST'])
+def generate_roadmap():
+    data = request.json
+    experiences = data.get('experiences', [])
+
+    if not experiences:
+        return jsonify({'error': 'No experiences provided'}), 400
+
+    phase1_role = "Software Engineering Intern (Backend or Cloud)"
+    phase1_companies = ["Shopify", "Stripe", "Twilio"]
+
+    phase2_role = "Software Engineer (Backend/Cloud)"
+    phase2_companies = ["AWS", "Microsoft", "Meta"]
+
+    phase3_role = "Software Engineering Intern (Machine Learning or Cloud Infrastructure)"
+    phase3_companies = ["Google Summer of Code", "Waymo", "DeepMind"]
+
+    phase4_role = "Software Engineering Intern"
+    phase4_companies = ["Google"]
+
+    roadmap_json = f"""
+    {{
+      "roadmap": [
+        {{
+          "phase": "Phase 1: Short-Term (Next 3-6 Months)",
+          "role": "{phase1_role}",
+          "companies": {phase1_companies}
+        }},
+        {{
+          "phase": "Phase 2: Mid-Term (6 Months - 1 Year)",
+          "role": "{phase2_role}",
+          "companies": {phase2_companies}
+        }},
+        {{
+          "phase": "Phase 3: Pre-Target (1 Year - 1.5 Years)",
+          "role": "{phase3_role}",
+          "companies": {phase3_companies}
+        }},
+        {{
+          "phase": "Phase 4: Target (1.5 - 2 Years)",
+          "role": "{phase4_role}",
+          "companies": {phase4_companies}
+        }}
+      ]
+    }}
+    """
+
+    amazon_company = "Amazon"
+    amazon_position = "Backend Developer Intern"
+    amazon_dates = "May 2022 - August 2022"
+    amazon_summary = "Built RESTful APIs using Node.js and optimized database queries with PostgreSQL."
+
+    meta_company = "Meta"
+    meta_position = "Software Engineering Intern"
+    meta_dates = "June 2023 - September 2023"
+    meta_summary = "Developed a social graph analysis tool using Python and GraphQL."
+
+    cleaned_experiences_json = f"""
+    {{
+      "cleaned_experiences": [
+        {{
+          "company": "{amazon_company}",
+          "position": "{amazon_position}",
+          "dates": "{amazon_dates}",
+          "summary": "{amazon_summary}"
+        }},
+        {{
+          "company": "{meta_company}",
+          "position": "{meta_position}",
+          "dates": "{meta_dates}",
+          "summary": "{meta_summary}"
+        }}
+      ]
+    }}
+    """
+
+
+    prompt = f""" You are a career advisor. Below are professional experiences. First, clean and summarize these 
+    experiences. Then, generate a career roadmap from my current position to the role of software engineer intern at 
+    Google. This roadmap should be based on my previous experiences. Structure the roadmap into clear phases, 
+    each showing a career step with company name and that stuff. Make it short and clear. "career_roadmap" should 
+    contain the companies (OTHER THAN THE ONES I ALREADY HAVE) that I should aim to work at to land an internship at 
+    google. The phases and timelines should start realistic. For example, can't expect me to get an Apple internship right away.
+
+
+    Experiences:
+    {experiences}
+
+    Return ONLY the information in valid JSON format with ONLY keys: "cleaned_experiences" and "career_roadmap". Do 
+    not put a "roadmap" key within "career_roadmap". Also do not put a "cleaned_experiences" key within "cleaned_experiences" This is what they keys should look like.
+    
+    "cleaned_experiences": {cleaned_experiences_json},
+    "career_roadmap" {roadmap_json}
+    
+
+    """
 
     headers = {
-        'Authorization': f'Bearer {access_token}'
+        'Authorization': f'Bearer {COHERE_API_KEY}',
+        'Content-Type': 'application/json'
     }
 
-    # Make the request to LinkedIn API to get the user profile
-    response = requests.get(profile_url, headers=headers)
+    payload = {
+        'model': 'command-xlarge-nightly',
+        'prompt': prompt,
+        'max_tokens': 3000,
+        'temperature': 0.7
+    }
+    try:
+        response = requests.post(COHERE_API_URL, json=payload, headers=headers)
 
-    if response.status_code == 200:
-        profile_data = response.json()  # The user's profile data
-        return jsonify(profile_data)    # Return the profile data as a response
-    else:
-        return jsonify({"error": "Failed to fetch profile data", "details": response.json()}), 500
+        response_data = response.json()
+        generated_text = response_data.get('generations', [{}])[0].get('text', '')
 
+
+        parsed_response = json.loads(generated_text)
+        cleaned_experiences = parsed_response.get('cleaned_experiences', [])
+        career_roadmap = parsed_response.get('career_roadmap', [])
+
+        return jsonify({
+            'cleaned_experiences': cleaned_experiences,
+            'career_roadmap': career_roadmap
+        })
+    except (json.JSONDecodeError, Exception) as e:
+        return jsonify({'error': f'Parsing error: {str(e)}', 'raw_output': generated_text}), 500
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
-
-
+    app.run(host='0.0.0.0', port=8000, debug=True)
