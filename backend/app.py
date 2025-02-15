@@ -4,9 +4,20 @@ from flask_cors import CORS
 from flask_session import Session  # NEW: For persistent sessions
 import redis
 
+from supabase import create_client, Client
+
+# Supabase URL and API Key
+SUPABASE_URL = 'https://voenczphlgojgihwbcwi.supabase.co'
+SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZW5jenBobGdvamdpaHdiY3dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2MDM0NzgsImV4cCI6MjA1NTE3OTQ3OH0.WASlZSz_mSEyxlDZxDhUWZOdQp9JG0n7IHvE0Y8Mo6Y'
+
+# Initialize Supabase client
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 # http://127.0.0.1:5000/linkedin-openid/callback
 app = Flask(__name__)
 print(Session)
+
+
 
 app.config['SECRET_KEY'] = 'WPL_AP1.vFgMgRskVtKfk2hP.RcATFw=='
 app.config['SESSION_TYPE'] = 'redis'  # Use Redis for session storage
@@ -45,6 +56,13 @@ def linkedin_callback():
         access_token = response.json().get('access_token')
         session['access_token'] = access_token  # Store in session
         print(f"Stored access token in session: {session.get('access_token')}")  # Debug print
+
+        # Now store access token in Supabase
+        user_data = {
+            "access_token": access_token
+        }
+        # Assuming your table is named "users" with columns id, created_at, access_token
+        supabase.table("User").insert([user_data]).execute()
 
         # Redirect user to frontend after login
         return redirect(f"{FRONTEND_REDIRECT_URI}?success=true")
@@ -87,4 +105,4 @@ def linkedin_profile():
 if __name__ == '__main__':
     app.run(debug=True)
 
-    
+
