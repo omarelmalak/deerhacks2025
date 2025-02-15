@@ -95,21 +95,30 @@ def parse_resume():
 def generate_roadmap():
     data = request.json
     experiences = data.get('experiences', [])
+    user_goal_company = data.get('desiredCompany')
+    user_goal_role = data.get('desiredRole')
 
     if not experiences:
         return jsonify({'error': 'No experiences provided'}), 400
 
     phase1_role = "Software Engineering Intern (Backend or Cloud)"
     phase1_companies = ["Shopify", "Stripe", "Twilio"]
+    phase1_rationales = ["You should work at Shopify because ..... ", "Stripe will help elevate you by....", "Twilio is a good fit because...."]
 
     phase2_role = "Software Engineer (Backend/Cloud)"
     phase2_companies = ["AWS", "Microsoft", "Meta"]
+    phase2_rationales = ["You should work at AWS because ..... ", "Microsoft will help elevate you by....", "Meta is a good fit because...."]
+
 
     phase3_role = "Software Engineering Intern (Machine Learning or Cloud Infrastructure)"
     phase3_companies = ["Google Summer of Code", "Waymo", "DeepMind"]
+    phase3_rationales = ["You should work at Google Summer of Code because ..... ", "Waymo will help elevate you by....", "DeepMind is a good fit because...."]
+
 
     phase4_role = "Software Engineering Intern"
     phase4_companies = ["Google"]
+    phase4_rationales = ["This is the end goal!"]
+
 
     roadmap_json = f"""
     {{
@@ -118,24 +127,28 @@ def generate_roadmap():
           "start_date": "October 2023",
           "end_date": "January 2025",
           "position": "{phase1_role}",
-          "companies": {phase1_companies}
+          "companies": {phase1_companies},
+          "company_rationale": {phase1_rationales}
         }},
         {{
           "start_date": "February 2025",
           "end_date": "October 2026",
           "position": "{phase2_role}",
-          "companies": {phase2_companies}
+          "companies": {phase2_companies},
+          "company_rationale": {phase2_rationales}
         }},
         {{
           "start_date": "November 2026"
           "end_date": "January 2028",
           "position": "{phase3_role}",
-          "companies": {phase3_companies}
+          "companies": {phase3_companies},
+          "company_rationale": {phase3_rationales}
         }},
         {{
           "start_date": "February 2028",
           "position": "{phase4_role}",
-          "companies": {phase4_companies}
+          "companies": {phase4_companies},
+          "company_rationale": {phase4_rationales}
         }}
       ]
     }}
@@ -174,24 +187,29 @@ def generate_roadmap():
     }}
     """
 
-    user_goal_company = "Google"
-    user_goal_role = "Chief Technical Officer"
+    # user_goal_company = "Google"
+    # user_goal_role = "Chief Technical Officer"
 
 
     prompt = f""" You are a career advisor. Below are professional experiences. First, clean and summarize these 
     experiences. Then, generate a career roadmap from my current position to the role of {user_goal_role} at 
-    {user}. This roadmap should be based on my previous experiences. Structure the roadmap into clear phases, 
-    each showing a career step with company name and that stuff. Make it short and clear. "career_roadmap" should 
-    contain the companies (OTHER THAN THE ONES I ALREADY HAVE) that I should aim to work at to land an internship at 
-    google. The phases and timelines should start realistic. For example, can't expect me to get an Apple internship right away.
-    The final entry should just have a start date and the end date should be "present" because that should be the final goal. 
+    {user_goal_company}. This roadmap should be based on my previous experiences. Structure the roadmap into clear 
+    phases, each showing a career step with company name and that stuff. Make it short and clear. "career_roadmap" 
+    should contain the companies (OTHER THAN THE ONES I ALREADY HAVE) that I should aim to work at to land an 
+    {user_goal_role} at {user_goal_company}. The phases and timelines should start realistic. The timeline (start and end dates) should 
+    be different depending on the goal role and company. For example, you can't expect me to get an Apple internship 
+    right away if I have 0 internship experience. You also can't expect me to get a CTO Position within 3 years if I 
+    have 0 previous experience. The final entry should just have a start date and the end date should be "present" 
+    because that should be the final goal.
 
 
     Experiences:
     {experiences}
 
     Return ONLY the information in valid JSON format with ONLY keys: "cleaned_experiences" and "career_roadmap". Do 
-    not put a "roadmap" key within "career_roadmap". Also do not put a "cleaned_experiences" key within "cleaned_experiences" This is what they keys should look like.
+    not put a "roadmap" key within "career_roadmap". Also do not put a "cleaned_experiences" key within 
+    "cleaned_experiences" This is an example of what the keys should look like. However, the actual content is 
+    different based on what I just told you
     
     "cleaned_experiences": {cleaned_experiences_json},
     "career_roadmap" {roadmap_json}
@@ -207,7 +225,7 @@ def generate_roadmap():
     payload = {
         'model': 'command-xlarge-nightly',
         'prompt': prompt,
-        'max_tokens': 3000,
+        'max_tokens': 4000,
         'temperature': 0.7
     }
     try:

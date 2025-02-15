@@ -18,6 +18,7 @@ const ResumeUpload: React.FC = () => {
 
   const handleFileUpload = async () => {
     if (!file) return alert("Please select a resume file to upload.");
+    if(desiredRole === "" || desiredCompany === "") return alert("Please enter a desired role and company.");
 
     const formData = new FormData();
     formData.append("file", file);
@@ -32,7 +33,7 @@ const ResumeUpload: React.FC = () => {
 
   const handleGenerateRoadmap = async (experiences: any[]) => {
     try {
-      const response = await axios.post("http://127.0.0.1:8000/generate-roadmap", { experiences });
+      const response = await axios.post("http://127.0.0.1:8000/generate-roadmap", { experiences, desiredRole, desiredCompany });
       console.log("API Response:", response.data);
 
       // Ensure correct data assignment
@@ -66,7 +67,7 @@ const ResumeUpload: React.FC = () => {
           <ul className="text-sm">
             {cleanedExperiences.map((exp, index) => (
               <li key={index} className="py-1">
-                <strong>{exp.position}</strong> at {exp.company} ({exp.dates}): {exp.summary}
+                <strong>{exp.position}</strong> at {exp.company} ({exp.start_date} to {exp.end_date}): {exp.summary}
               </li>
             ))}
           </ul>
@@ -79,12 +80,26 @@ const ResumeUpload: React.FC = () => {
           <ul className="text-sm">
             {roadmap.map((phase, index) => (
               <li key={index} className="py-2">
-                <strong>{phase.phase}</strong> ({phase.role}) at {phase.companies?.join(", ") || "N/A"}
+                <strong>{phase.position} at {phase.companies?.join(", ") || "N/A"} </strong> ({phase.start_date} to {phase.end_date})
               </li>
             ))}
           </ul>
         </div>
       )}
+            <input
+        type="text"
+        placeholder="Desired Role"
+        value={desiredRole}
+        onChange={(e) => setDesiredRole(e.target.value)}
+        className="w-full mb-2 p-2 border rounded"
+      />
+      <input
+        type="text"
+        placeholder="Desired Company"
+        value={desiredCompany}
+        onChange={(e) => setDesiredCompany(e.target.value)}
+        className="w-full mb-4 p-2 border rounded"
+      />
     </div>
   );
 };
