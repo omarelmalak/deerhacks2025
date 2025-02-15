@@ -115,23 +115,26 @@ def generate_roadmap():
     {{
       "roadmap": [
         {{
-          "phase": "Phase 1: Short-Term (Next 3-6 Months)",
-          "role": "{phase1_role}",
+          "start_date": "October 2023",
+          "end_date": "January 2025",
+          "position": "{phase1_role}",
           "companies": {phase1_companies}
         }},
         {{
-          "phase": "Phase 2: Mid-Term (6 Months - 1 Year)",
-          "role": "{phase2_role}",
+          "start_date": "February 2025",
+          "end_date": "October 2026",
+          "position": "{phase2_role}",
           "companies": {phase2_companies}
         }},
         {{
-          "phase": "Phase 3: Pre-Target (1 Year - 1.5 Years)",
-          "role": "{phase3_role}",
+          "start_date": "November 2026"
+          "end_date": "January 2028",
+          "position": "{phase3_role}",
           "companies": {phase3_companies}
         }},
         {{
-          "phase": "Phase 4: Target (1.5 - 2 Years)",
-          "role": "{phase4_role}",
+          "start_date": "February 2028",
+          "position": "{phase4_role}",
           "companies": {phase4_companies}
         }}
       ]
@@ -140,12 +143,14 @@ def generate_roadmap():
 
     amazon_company = "Amazon"
     amazon_position = "Backend Developer Intern"
-    amazon_dates = "May 2022 - August 2022"
+    amazon_start_date = "May 2022"
+    amazon_end_date = "August 2022"
     amazon_summary = "Built RESTful APIs using Node.js and optimized database queries with PostgreSQL."
 
     meta_company = "Meta"
     meta_position = "Software Engineering Intern"
-    meta_dates = "June 2023 - September 2023"
+    meta_start_date = "June 2023"
+    meta_end_date = "September 2023"
     meta_summary = "Developed a social graph analysis tool using Python and GraphQL."
 
     cleaned_experiences_json = f"""
@@ -154,26 +159,32 @@ def generate_roadmap():
         {{
           "company": "{amazon_company}",
           "position": "{amazon_position}",
-          "dates": "{amazon_dates}",
+          "start_date": "{amazon_start_date}",
+          "end_date": "{amazon_end_date}"
           "summary": "{amazon_summary}"
         }},
         {{
           "company": "{meta_company}",
           "position": "{meta_position}",
-          "dates": "{meta_dates}",
+          "start_date": "{meta_start_date}",
+          "end_date": "{meta_end_date}"
           "summary": "{meta_summary}"
         }}
       ]
     }}
     """
 
+    user_goal_company = "Google"
+    user_goal_role = "Chief Technical Officer"
+
 
     prompt = f""" You are a career advisor. Below are professional experiences. First, clean and summarize these 
-    experiences. Then, generate a career roadmap from my current position to the role of software engineer intern at 
-    Google. This roadmap should be based on my previous experiences. Structure the roadmap into clear phases, 
+    experiences. Then, generate a career roadmap from my current position to the role of {user_goal_role} at 
+    {user}. This roadmap should be based on my previous experiences. Structure the roadmap into clear phases, 
     each showing a career step with company name and that stuff. Make it short and clear. "career_roadmap" should 
     contain the companies (OTHER THAN THE ONES I ALREADY HAVE) that I should aim to work at to land an internship at 
     google. The phases and timelines should start realistic. For example, can't expect me to get an Apple internship right away.
+    The final entry should just have a start date and the end date should be "present" because that should be the final goal. 
 
 
     Experiences:

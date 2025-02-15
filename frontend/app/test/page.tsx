@@ -7,6 +7,8 @@ const ResumeUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [cleanedExperiences, setCleanedExperiences] = useState<any[]>([]);
   const [roadmap, setRoadmap] = useState<any[]>([]);
+  const [desiredRole, setDesiredRole] = useState<string>("");
+  const [desiredCompany, setDesiredCompany] = useState<string>("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length) {
