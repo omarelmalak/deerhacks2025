@@ -38,6 +38,7 @@ CLIENT_ID = '778z82h4dtgrrz'
 CLIENT_SECRET = 'WPL_AP1.vFgMgRskVtKfk2hP.RcATFw=='
 REDIRECT_URI = 'http%3A%2F%2F127.0.0.1%3A5000%2Flinkedin-openid%2Fcallback'  # No spaces
 BACKEND_REDIRECT_URI = 'http://127.0.0.1:5000/linkedin-openid/callback'  # Backend receives code
+FRONTEND_REDIRECT_URI = 'http://localhost:3000/dashboard'
 
 
 @app.route('/parse-resume', methods=['POST'])

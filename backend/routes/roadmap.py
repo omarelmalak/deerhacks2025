@@ -1,12 +1,13 @@
 import json
 import requests
 from flask import Blueprint, request, jsonify
-from app import supabase, COHERE_API_KEY, COHERE_API_URL
 
 roadmap_bp = Blueprint('roadmap_bp', __name__)
 
 @roadmap_bp.route('/generate-roadmap', methods=['POST'])
 def generate_roadmap():
+    from app import supabase, COHERE_API_KEY, COHERE_API_URL
+
     data = request.json
     experiences = data.get('experiences', [])
     user_goal_company = data.get('desiredCompany')
@@ -175,6 +176,7 @@ def generate_roadmap():
 
 @roadmap_bp.route('/get-roadmaps/<user_id>', methods=['GET'])
 def get_user_roadmaps(user_id):
+    from app import supabase, COHERE_API_KEY, COHERE_API_URL
     try:
         response = supabase.table('roadmap').select('*').eq('user_id', user_id).execute()
         if not response.data:

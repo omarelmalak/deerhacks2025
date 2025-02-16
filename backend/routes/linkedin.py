@@ -1,11 +1,12 @@
 import requests
 from flask import Blueprint, request, jsonify, redirect
-from app import supabase, CLIENT_ID, CLIENT_SECRET, BACKEND_REDIRECT_URI, FRONTEND_REDIRECT_URI
 
 linkedin_bp = Blueprint('linkedin_bp', __name__)
 
 @linkedin_bp.route('/linkedin-openid/callback')
 def linkedin_callback():
+    from app import supabase, CLIENT_ID, CLIENT_SECRET, BACKEND_REDIRECT_URI, FRONTEND_REDIRECT_URI
+
     code = request.args.get('code')
     if not code:
         return jsonify({"error": "No authorization code"}), 400
