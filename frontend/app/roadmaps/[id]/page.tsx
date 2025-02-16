@@ -10,7 +10,7 @@ import React, {
 import { gsap } from "gsap";
 import { Bungee, Inter } from "next/font/google";
 import ScrollTrigger from "gsap/ScrollTrigger";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname, useParams } from "next/navigation";
 import axios from "axios";
 import { useSwipeable } from "react-swipeable";
 
@@ -275,6 +275,14 @@ export default function ExperienceTimeline() {
   const success = searchParams.get("success");
   const timelineItems = buildTimeline(experiences);
 
+  const pathname = usePathname();
+  const segments = pathname.split('/').filter(Boolean);
+
+  segments.splice(-1);
+
+  const newPathname = '/' + segments.join('/');
+
+  const { id } = useParams();
   const handleGetUserRoadmaps = async () => {
     try {
       const response = await axios.get(
@@ -286,30 +294,32 @@ export default function ExperienceTimeline() {
 
   const handleGetRoadmapExperiences = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:5000/get-experiences/8");
+      const response = await axios.get(`http://127.0.0.1:5000/get-experiences/${id}`);
       const sortedExperiences: Experience[] = response.data.experiences.sort(
         (a: Experience, b: Experience) =>
           new Date(a.end_date).getTime() - new Date(b.end_date).getTime()
       );
+
       setRoadmapExperiences(sortedExperiences);
       setExperiences(sortedExperiences);
+
+      console.log(roadmapExperiences);
+
     } catch (error) {}
   };
 
   if (success) {
     localStorage.setItem("user_id", success.toString());
-  } else {
-    localStorage.setItem("user_id", "None");
-  }
+  } 
 
   useEffect(() => {
     if (success) {
       localStorage.setItem("user_id", success.toString());
-    } else {
-      localStorage.setItem("user_id", "None");
-    }
+    } 
     handleGetRoadmapExperiences();
   }, []);
+
+  useEffect(() => {console.log(experiences);}, [experiences]);
 
   useLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);

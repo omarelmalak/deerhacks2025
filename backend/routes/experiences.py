@@ -12,6 +12,7 @@ def generate_cleaned_experiences():
 
     data = request.json
     experiences = data.get('experiences', [])
+    print("experiencies from cleaned", experiences)
     user_id = data.get('user_id', None)
     if not experiences:
         return jsonify({'error': 'No experiences provided'}), 400
@@ -44,14 +45,13 @@ def generate_cleaned_experiences():
                   "start_date": "{meta_start_date}",
                   "end_date": "{meta_end_date}"
                   "summary": "{meta_summary}",
-
                 }}
               ]
             }}
             """
 
     prompt = f""" You are a career assistant. Clean and summarize the following professional experiences. Any 
-    projects should have "Project" for its company. Return ONLY the information with the following JSON format: 
+    projects should have "Project" for its company key. Return ONLY the information with the following JSON format: 
     "cleaned_experiences": {cleaned_experiences_json}
 
         Experiences:

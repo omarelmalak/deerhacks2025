@@ -42,7 +42,7 @@ def generate_roadmap():
 
     roadmap_json = f"""
            {{
-             "roadmap": [
+             [
                {{
                  "start_date": "October 2023",
                  "end_date": "January 2025",
@@ -88,7 +88,7 @@ def generate_roadmap():
 
 
        Return ONLY the information in valid JSON format with ONLY the following keys. Do 
-       not put a "roadmap" key within "career_roadmap". Also do not put a "cleaned_experiences" key within 
+       NOT put a "roadmap" key within "career_roadmap". Also do not put a "cleaned_experiences" key within 
        "cleaned_experiences" This is an example of what the keys should look like. However, the actual content is 
        different based on what I just told you. 
 
@@ -240,6 +240,7 @@ def get_user_roadmaps(user_id):
     from app import supabase, COHERE_API_KEY, COHERE_API_URL
     try:
         response = supabase.table('roadmap').select('*').eq('user_id', user_id).execute()
+
         print(response)
         if not response.data:
             return jsonify({"message": "No roadmaps found"}), 404

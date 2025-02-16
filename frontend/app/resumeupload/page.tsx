@@ -28,8 +28,6 @@ const ResumeUploadPage = () => {
 
     if (success) {
         localStorage.setItem('user_id', success.toString());
-    } else {
-        localStorage.setItem('user_id', 'None')
     }
 
     const getProfileInformation = async () => {
