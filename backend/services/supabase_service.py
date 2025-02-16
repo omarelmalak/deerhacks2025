@@ -14,3 +14,6 @@ def insert_user(data):
 
 def get_user_by_email(email):
     return supabase.table("user").select("*").eq("email", email).execute()
+
+def get_cleaned_experience(user_id):
+        return supabase.table("experience").select("*").eq("user_id", user_id).eq("in_resume", True).execute()
