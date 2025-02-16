@@ -34,22 +34,23 @@ def generate_cleaned_experiences():
                   "position": "{amazon_position}",
                   "start_date": "{amazon_start_date}",
                   "end_date": "{amazon_end_date}"
-                  "summary": "{amazon_summary}"
+                  "summary": "{amazon_summary}",
                 }},
                 {{
                   "company": "{meta_company}",
                   "position": "{meta_position}",
                   "start_date": "{meta_start_date}",
                   "end_date": "{meta_end_date}"
-                  "summary": "{meta_summary}"
+                  "summary": "{meta_summary}",
+
                 }}
               ]
             }}
             """
 
     prompt = f""" You are a career assistant. Clean and summarize the following professional experiences. Any 
-        projects should have "Project" for its company. Return ONLY the information with the following JSON format: 
-        "cleaned_experiences": {cleaned_experiences_json}
+    projects should have "Project" for its company. Return ONLY the information with the following JSON format: 
+    "cleaned_experiences": {cleaned_experiences_json}
 
         Experiences:
         {experiences}
@@ -61,12 +62,15 @@ def generate_cleaned_experiences():
     payload = {
         'model': 'command-xlarge-nightly',
         'prompt': prompt,
-        'max_tokens': 2000,
+        'max_tokens': 8000,
         'temperature': 0.3
     }
+    print("we here")
     try:
-        response = requests.post(COHERE_API_URL, json=payload, headers=headers)
+        response = requests.post("https://api.cohere.ai/v1/generate", json=payload, headers=headers)
+        print(response)
         response_data = response.json()
+        print(response_data)
         text = response_data.get('generations', [{}])[0].get('text', '')
         parsed = json.loads(text)
         cleaned_experiences = parsed.get('cleaned_experiences', [])
@@ -79,6 +83,7 @@ def generate_cleaned_experiences():
                 "end_date": exp.get("end_date", "Present"),
                 "summary": exp.get("summary", ""),
                 "in_resume": True,
+
                 "user_id": user_id
             }]).execute()
 
