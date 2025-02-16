@@ -8,6 +8,7 @@ import cloudinary.uploader
 from PyPDF2 import PdfReader
 from supabase import create_client, Client
 from flask_session import Session  # NEW: For persistent sessions
+import uuid
 
 
 cloudinary.config(
@@ -84,7 +85,7 @@ def linkedin_callback():
             "access_token": access_token
         }
         # Assuming your table is named "users" with columns id, created_at, access_token
-        supabase.table("User").insert([user_data]).execute()
+        # supabase.table("User").insert([user_data]).execute()
 
         # Redirect user to frontend after login
         return redirect(f"{FRONTEND_REDIRECT_URI}?success=1")
@@ -165,6 +166,8 @@ def generate_roadmap():
 
     user_goal_company = data.get('desiredCompany')
     user_goal_role = data.get('desiredRole')
+
+    user_id = data.get('user_id')
 
     if not experiences:
         return jsonify({'error': 'No experiences provided'}), 400
@@ -316,6 +319,7 @@ def generate_roadmap():
 
         print("here")
         for cleaned_experience in as_dict["cleaned_experiences"]:
+            id = uuid.uuid4()
             print("here now")
             position = cleaned_experience.get("position", "Unknown Position")
             print(position)
@@ -339,7 +343,8 @@ def generate_roadmap():
                     "start_date": start_date,
                     "end_date": end_date,  # Set to NULL if not available
                     "summary": rationales[i],  # Store rationale as summary
-                    "in_resume": False  # Set to False for all
+                    "in_resume": False,
+                    "roadmap_id": id
                 }
 
                 response = supabase.table("experience").select("*").execute()
@@ -347,6 +352,16 @@ def generate_roadmap():
                 print(experience_data)
 
                 response = supabase.table("experience").insert([experience_data]).execute()
+
+                response = (
+                    supabase.table("user")
+                    .update({
+                        "roadmap_ids": supabase.sql("array_append(roadmap_ids, %s)", id)
+                    })
+                    .eq("id", user_id)
+                    .execute()
+                )
+
 
         print("here")
         for roadmap in as_dict["career_roadmap"]:
