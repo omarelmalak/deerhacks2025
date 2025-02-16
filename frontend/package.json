@@ -9,12 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tsparticles/engine": "^3.8.1",
     "@types/gsap": "^1.20.2",
     "axios": "^1.7.9",
     "gsap": "^3.12.7",
     "next": "^15.1.7",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-particles": "^2.12.2"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -23,5 +25,8 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
+  },
+  "overrides": {
+    "tsparticles-engine": "latest"
   }
 }

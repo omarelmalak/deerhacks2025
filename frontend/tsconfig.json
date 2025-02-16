@@ -35,7 +35,7 @@
     ".next/types/**/*.ts",
     "../page.tsx",
     "app/components/stars.jsx",
-    "app/page.tsx"
+    "app/dashboard/page.tsx"
   ],
   "exclude": [
     "node_modules"

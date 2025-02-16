@@ -13,9 +13,9 @@ export default {
         foreground: "var(--foreground)",
       },
       fontFamily: {
-        sans: ['Poppins', 'sans-serif'],
+        poppins: ['Poppins', 'sans-serif'],
         bungee: ['Bungee', 'sans-serif'],
-        inter: ['Inter', 'sans-serif']
+        inter: ['Inter', 'sans-serif'],
       },
     },
   },
