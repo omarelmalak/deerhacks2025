@@ -25,7 +25,7 @@ cloudinary.config(
 app = Flask(__name__)
 CORS(app)
 
-COHERE_API_KEY = '86GngtGqjEgRBd8njQkXQ9fl4LcRWY9dhpwY1vvs'
+COHERE_API_KEY = 'KEY_REMOVED'
 COHERE_API_URL = 'https://api.cohere.ai/v1/generate'
 
 SUPABASE_URL = 'https://voenczphlgojgihwbcwi.supabase.co'
