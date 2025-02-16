@@ -77,23 +77,26 @@ def generate_roadmap():
     user_goal_role= "i want to work at google as a CTO"
 
     prompt = f""" Generate a clear and concise career roadmap to help me reach my goal role. This is what I am 
-    looking for {user_prompt}. Use my experience
-    history ("cleaned_experiences") as a foundation, and structure the roadmap into distinct phases, 
-    each representing a career step with corresponding company names and role details. Ensure the roadmap is 
-    realistic and achievable, with a timeline that starts at least six months from the present and progresses upward 
-    in terms of responsibility and prestige. Each phase should have a unique start and end date, with the final entry 
-    having an open-ended "present" end date as the long-term goal. Account for my previous experiences and provide a 
-    path that builds upon them coherently.
+    looking for {user_prompt}. Use my experience history ("cleaned_experiences") as a foundation, and structure the 
+    roadmap into distinct phases, each representing a career step with corresponding company names and role details. 
+    Ensure the roadmap is realistic and achievable, with a timeline that starts at least six months from the present 
+    and progresses upward in terms of responsibility and prestige. Be very realistic with the timelines. For example, 
+    I cant get to CTO position in 5 years if i have little experience. Each phase should have a unique start and end 
+    date, with the final entry having an open-ended "present" end date as the long-term goal. Account for my previous 
+    experiences and provide a path that builds upon them coherently.
 
 
 
-       Return ONLY the information in valid JSON format with ONLY keys: "cleaned_experiences" and "career_roadmap". Do 
+       Return ONLY the information in valid JSON format with ONLY the following keys. Do 
        not put a "roadmap" key within "career_roadmap". Also do not put a "cleaned_experiences" key within 
        "cleaned_experiences" This is an example of what the keys should look like. However, the actual content is 
        different based on what I just told you. 
 
        "cleaned_experiences": {experiences},
        "career_roadmap" {roadmap_json}
+       "roadmap_title": "Senior Software Engineer at Google",
+       "roadmap_companies": ["Amazon", "Meta"], (this should be a list of all companies along the way in the roadmap)
+       "roadmap_duration": "4-6 years"
        """
 
 
@@ -134,10 +137,16 @@ def generate_roadmap():
 
         career_roadmap = parsed_response.get('career_roadmap', [])
         print("career_roadmap ", career_roadmap)
+        roadmap_title = parsed_response.get('roadmap_title', "")
+        print()
+        roadmap_companies = parsed_response.get('roadmap_companies', [])
+        roadmap_duration = parsed_response.get("roadmap_duration", "")
+
 
         print("got json stuff")
 
-        json_data = jsonify({'cleaned_experiences': cleaned_experiences, 'career_roadmap': career_roadmap})
+        json_data = jsonify({'cleaned_experiences': cleaned_experiences, 'career_roadmap': career_roadmap,
+                             'duration': roadmap_duration, 'companies': roadmap_companies, "title": roadmap_title })
 
         as_dict = json_data.get_json()
 
@@ -145,7 +154,7 @@ def generate_roadmap():
 
         print("res")
         roadmap_response = supabase.table('roadmap').insert({
-            'user_id': user_id
+            'user_id': user_id, 'title': as_dict["title"], "duration": as_dict["duration"], "companies": as_dict["companies"]
         }).execute()
 
         # Get newly created roadmap_id
@@ -174,7 +183,8 @@ def generate_roadmap():
                 "end_date": end_date,  # Set to NULL if not available
                 "summary": summary,  # Store rationale as summary
                 "in_resume": True,  # Set to True for all
-                "roadmap_id": roadmap_id
+                "roadmap_id": roadmap_id,
+                "user_id": user_id
             }
 
             print(experience_data)
@@ -219,7 +229,7 @@ def generate_roadmap():
                 print(experience_data)
                 response = supabase.table("experience").insert([experience_data]).execute()
                 print("response for experience", response)
-                # response = supabase.table("roadmap").insert([])
+                print("user prompt", user_prompt)
 
         return json_data
     except (json.JSONDecodeError, Exception) as e:
@@ -230,6 +240,7 @@ def get_user_roadmaps(user_id):
     from app import supabase, COHERE_API_KEY, COHERE_API_URL
     try:
         response = supabase.table('roadmap').select('*').eq('user_id', user_id).execute()
+        print(response)
         if not response.data:
             return jsonify({"message": "No roadmaps found"}), 404
         return jsonify({"user_id": user_id, "roadmaps": response.data}), 200

@@ -1,113 +1,94 @@
 "use client";
-
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { motion } from "framer-motion";
 
-const ResumeUpload: React.FC = () => {
-    const [file, setFile] = useState<File | null>(null);
-    const [cleanedExperiences, setCleanedExperiences] = useState<any[]>([]);
-    const [roadmap, setRoadmap] = useState<any[]>([]);
-    const [desiredRole, setDesiredRole] = useState<string>("");
-    const [desiredCompany, setDesiredCompany] = useState<string>("");
-
-    const linkedInUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=778z82h4dtgrrz&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Flinkedin-openid%2Fcallback&scope=openid%20profile%20email`;
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files?.length) {
-            setFile(e.target.files[0]);
-        }
-    };
-
-    const handleFileUpload = async () => {
-        if (!file) return alert("Please select a resume file to upload.");
-        if (desiredRole === "" || desiredCompany === "") return alert("Please enter a desired role and company.");
-
-        const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-            const res = await axios.post("http://127.0.0.1:5000/parse-resume", formData);
-            handleGenerateRoadmap(res.data.experiences || []);
-        } catch (error) {
-            console.error("Error uploading file:", error);
-        }
-    };
-
-    const handleGenerateRoadmap = async (experiences: any[]) => {
-        try {
-            const response = await axios.post("http://127.0.0.1:5000/generate-roadmap", { experiences, desiredRole, desiredCompany, user_id: localStorage.getItem("user_id") });
-            console.log("API Response:", response.data);
-
-            // Ensure correct data assignment
-            const { cleaned_experiences, career_roadmap } = response.data;
-            setCleanedExperiences(cleaned_experiences || []);
-            setRoadmap(career_roadmap || []);
-        } catch (error) {
-            console.error("Error generating roadmap:", error);
-        }
-    };
-
-    useEffect(() => {
-        console.log("Cleaned Experiences:", cleanedExperiences);
-        console.log("Career Roadmap:", roadmap);
-    }, [cleanedExperiences, roadmap]);
-
-    return (
-        <div className="max-w-lg mx-auto p-4 border rounded-lg shadow">
-            <h2 className="text-xl font-bold mb-4">Upload Your Resume</h2>
-            <input type="file" onChange={handleFileChange} className="mb-4" />
-            <button
-                onClick={handleFileUpload}
-                className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-                Upload and Generate Roadmap
-            </button>
-
-            {cleanedExperiences.length > 0 && (
-                <div className="mt-4 border rounded p-2">
-                    <h3 className="font-bold mb-2">Cleaned Experiences:</h3>
-                    <ul className="text-sm">
-                        {cleanedExperiences.map((exp, index) => (
-                            <li key={index} className="py-1">
-                                <strong>{exp.position}</strong> at {exp.company} ({exp.start_date} to {exp.end_date}): {exp.summary}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {roadmap.length > 0 && (
-                <div className="mt-4 border rounded p-2">
-                    <h3 className="font-bold mb-2">Career Roadmap:</h3>
-                    <ul className="text-sm">
-                        {roadmap.map((phase, index) => (
-                            <li key={index} className="py-2">
-                                <strong>{phase.position} at {phase.companies?.join(", ") || "N/A"} </strong> ({phase.start_date} to {phase.end_date})
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-            <input
-                type="text"
-                placeholder="Desired Role"
-                value={desiredRole}
-                onChange={(e) => setDesiredRole(e.target.value)}
-                className="w-full mb-2 p-2 border rounded"
-            />
-            <input
-                type="text"
-                placeholder="Desired Company"
-                value={desiredCompany}
-                onChange={(e) => setDesiredCompany(e.target.value)}
-                className="w-full mb-4 p-2 border rounded"
-            />
-
-            <a href={linkedInUrl}>
-                <button>Login with LinkedIn</button>
-            </a>
-        </div>
-    );
+type Roadmap = {
+  id: number;
+  title: string;
+  companies: string[]; // Companies as a list
+  duration: string;
+  user_id: number;
 };
 
-export default ResumeUpload;
+export default function RoadmapCards() {
+  const userId = 3;
+  const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
+  const [userPrompt, setUserPrompt] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchRoadmaps = async () => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:5000/get-roadmaps/${userId}`);
+      setRoadmaps(response.data?.roadmaps ?? []);
+    } catch {
+      setError("Failed to load roadmaps. Please try again later.");
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const response = await axios.post("http://127.0.0.1:5000/generate-roadmap", {
+        userPrompt,
+        user_id: parseInt(localStorage.getItem("user_id") || "0"),
+      });
+      setRoadmaps(response.data.career_roadmap || []);
+    } catch (error) {
+      console.error("Error generating roadmap:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRoadmaps();
+  }, []);
+
+  return (
+    <div className="p-6">
+      <div className="mb-6 flex space-x-4 items-center">
+        <input
+          type="text"
+          value={userPrompt}
+          onChange={(e) => setUserPrompt(e.target.value)}
+          placeholder="Enter your career goal..."
+          className="border p-3 rounded-lg w-full shadow-sm focus:outline-blue-500"
+        />
+        <button
+          onClick={handleSubmit}
+          className="bg-gradient-to-r from-red-500 to-orange-400 text-white px-6 py-2 rounded-full shadow-lg hover:scale-105 transition-transform"
+        >
+          Generate
+        </button>
+      </div>
+      <div className="flex overflow-x-auto space-x-6 p-4">
+        {roadmaps.length > 0 ? (
+          roadmaps.map((roadmap) => (
+            <motion.div
+              key={roadmap.id}
+              whileHover={{ scale: 1.05 }}
+              className="flex-shrink-0 w-80 bg-white border-2 border-red-300 rounded-xl shadow-xl p-5 text-center"
+            >
+              <h3 className="text-xl font-extrabold text-gray-800 mb-3">
+                {roadmap.title}
+              </h3>
+              <div className="mb-3">
+                <p className="text-gray-500 font-semibold">Featured Companies:</p>
+                {roadmap.companies.slice(0, 2).map((company, idx) => (
+                  <p key={idx} className="text-gray-600 text-sm">{company}</p>
+                ))}
+              </div>
+              {roadmap.duration && (
+                <div className="text-gray-500 text-sm font-medium mb-2">
+                  Duration: {roadmap.duration}
+                </div>
+              )}
+            </motion.div>
+          ))
+        ) : (
+          <div className="text-center text-gray-400 font-medium">
+            No roadmaps found.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

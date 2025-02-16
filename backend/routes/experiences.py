@@ -85,7 +85,6 @@ def generate_cleaned_experiences():
                 "end_date": exp.get("end_date", "Present"),
                 "summary": exp.get("summary", ""),
                 "in_resume": True,
-
                 "user_id": user_id
             }]).execute()
 
