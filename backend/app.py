@@ -1,6 +1,7 @@
 import json
 
 import requests
+import supabase
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import cloudinary
@@ -24,6 +25,9 @@ COHERE_API_URL = 'https://api.cohere.ai/v1/generate'
 
 API_KEY = 'iBSdCFmG4HjCwYhtcNHUR913W3bBFVaw'
 URL_ENDPOINT = 'https://api.apilayer.com/resume_parser/url'
+
+SUPABASE_URL = 'https://voenczphlgojgihwbcwi.supabase.co'
+SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZW5jenBobGdvamdpaHdiY3dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2MDM0NzgsImV4cCI6MjA1NTE3OTQ3OH0.WASlZSz_mSEyxlDZxDhUWZOdQp9JG0n7IHvE0Y8Mo6Y'
 
 @app.route('/parse-resume', methods=['POST'])
 def parse_resume():
@@ -199,7 +203,8 @@ def generate_roadmap():
     {user_goal_role} at {user_goal_company}. The phases and timelines should start realistic. The timeline (start and end dates) should 
     be different depending on the goal role and company. For example, you can't expect me to get an Apple internship 
     right away if I have 0 internship experience. You also can't expect me to get a CTO Position within 3 years if I 
-    have 0 previous experience. The final entry should just have a start date and the end date should be "present" 
+    have 0 previous experience. However, my career should only go up (i.e. I should not go from intern to full time and back
+    to intern) The final entry should just have a start date and the end date should be "present" 
     because that should be the final goal.
 
 
@@ -239,10 +244,34 @@ def generate_roadmap():
         cleaned_experiences = parsed_response.get('cleaned_experiences', [])
         career_roadmap = parsed_response.get('career_roadmap', [])
 
-        return jsonify({
-            'cleaned_experiences': cleaned_experiences,
-            'career_roadmap': career_roadmap
-        })
+
+        json_data = jsonify({'cleaned_experiences': cleaned_experiences, 'career_roadmap': career_roadmap})
+
+        for roadmap in response_data["career_roadmap"]:
+            for company_list, rationale in zip(roadmap["companies"], roadmap["company_rationale"]):
+                for i in range(len(company_list)):
+                    # Prepare data for insertion
+                    experience_data = {
+                        "company": company_list[i],
+                        "position": roadmap["position"],
+                        "start_date": roadmap["start_date"],
+                        "end_date": roadmap.get("end_date", None),  # Set to NULL if not available
+                        "summary": rationale,  # Store rationale as summary
+                        "in_resume": False  # Set to False for all
+                    }
+
+                    print(experience_data)
+
+                    # Insert into Supabase
+                    response = supabase.table("experience").insert(experience_data).execute()
+
+                    # Check for errors
+                    if response.get("error"):
+                        print(f"Error inserting {company}: {response['error']}")
+                    else:
+                        print(f"Inserted {company} into experience table.")
+
+        return json_data
     except (json.JSONDecodeError, Exception) as e:
         return jsonify({'error': f'Parsing error: {str(e)}', 'raw_output': generated_text}), 500
 
