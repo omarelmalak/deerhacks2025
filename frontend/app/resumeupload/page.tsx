@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Poppins } from "next/font/google";
 import { CheckCircle, CloudUpload } from "lucide-react";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { redirect, useRouter, useSearchParams } from 'next/navigation';
 import axios from "axios";
 
 
@@ -19,6 +19,7 @@ const ResumeUploadPage = () => {
     const [firstName, setFirstName] = useState<string>("");
     const [lastName, setLastName] = useState<string>("");
     const [profilePicture, setProfilePicture] = useState<string>("");
+    const [parsedResume, setParsedResume] = useState<any[]>([]);
 
     const searchParams = useSearchParams();
     const success = searchParams.get('success');
@@ -48,23 +49,64 @@ const ResumeUploadPage = () => {
         }
     };
 
-    // Call getProfileInformation on component mount
+
+
     useEffect(() => {
         getProfileInformation();
     }, []);
 
-    const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleResumeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setResume(e.target.files[0]);
+            const file = e.target.files[0];
+            setResume(file);
             setLoading(true);
-
-            // Simulate a delay to mimic a file upload
-            setTimeout(() => {
+    
+            const formData = new FormData();
+            formData.append("file", file);
+    
+            try {
+                const parseResponse = await fetch("http://localhost:5000/parse-resume", {
+                    method: "POST",
+                    body: formData,
+                });
+    
+                const parseResult = await parseResponse.json();
+                if (!parseResponse.ok) {
+                    alert(`Failed to parse resume: ${parseResult.error}`);
+                    return;
+                }
+    
+                const cleanedResponse = await fetch("http://localhost:5000/generate-cleaned-experiences", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        experiences: parseResult.experiences,
+                        user_id: parseInt(localStorage.getItem("user_id") || "0", 10),
+                    }),
+                });
+    
+                const cleanedResult = await cleanedResponse.json();
+                if (cleanedResponse.ok) {
+                    console.log("Cleaned Experiences:", cleanedResult.cleaned_experiences);
+                    alert("Experiences cleaned and saved successfully!");
+                } else {
+                    console.error("Error cleaning experiences:", cleanedResult.error);
+                    alert(`Failed to clean experiences: ${cleanedResult.error}`);
+                }
+                redirect('/dashboard');
+            } catch (error) {
+                console.error("Network error:", error);
+                alert("Network error. Please try again.");
+            } finally {
                 setLoading(false);
                 setShowUploadSuccess(true);
-            }, 3000); // Simulating a 3-second file upload process
+            }
         }
     };
+    
+    
 
     return (
         <div
