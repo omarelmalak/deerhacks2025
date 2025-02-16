@@ -4,6 +4,8 @@ import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { Bungee, Inter } from 'next/font/google';
 import ScrollTrigger from "gsap/ScrollTrigger";
+import { useRouter, useSearchParams } from 'next/navigation';
+
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -64,8 +66,20 @@ export default function ExperienceTimeline() {
     const experienceRefs = useRef<(HTMLDivElement | null)[]>([]);
     const userCardRef = useRef<HTMLDivElement | null>(null);
     const lineRef = useRef<HTMLDivElement | null>(null);
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    const success = searchParams.get('success');
+
+    if (success) {
+        localStorage.setItem('user_id', success.toString());
+    } else {
+        localStorage.setItem('user_id', 'None')
+    }
 
     useEffect(() => {
+
+
         gsap.fromTo(
             userCardRef.current,
             { opacity: 0, y: 50 },
@@ -139,6 +153,7 @@ export default function ExperienceTimeline() {
                         <h3 className="text-xl font-bold text-gray-800">John Doe</h3>
                         <p className="text-sm text-gray-500">Full Stack Developer</p>
                         <p className="text-xs text-gray-400 italic">2021 - Present</p>
+                        <p className="text-black">LOCAL STORAGE CONTENT: {localStorage.getItem('user_id')}</p>
                     </div>
                 </div>
             </div>

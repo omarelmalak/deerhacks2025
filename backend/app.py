@@ -79,15 +79,32 @@ def linkedin_callback():
         else:
             return jsonify({"error": "Failed to fetch profile data", "details": response.json()}), 500
 
-        # Now store access token in Supabase
-        user_data = {
-            "access_token": access_token
-        }
-        # Assuming your table is named "users" with columns id, created_at, access_token
-        supabase.table("User").insert([user_data]).execute()
+        first_name = profile_data.get("given_name", "Unknown first name")
+        last_name = profile_data.get("family_name", "Unknown last name")
+        email = profile_data.get("email", "Unknown email")
+        profile_picture = profile_data.get("picture", "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg")
+
+        # IF THE EMAIL EXISTS, WE NEED TO JUST QUERY THAT RECORD
+        response = supabase.table("user").select("*").eq("email", email).execute()
+
+        if response.data:
+            user_id = response.data[0].get("id")
+        else:
+            # IF IT DOESN'T EXIST, CREATE IT
+            user_data = {
+                "current_access_token": access_token,
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "profile_picture": profile_picture
+            }
+            # Assuming your table is named "users" with columns id, created_at, access_token
+            supabase.table("user").insert([user_data]).execute()
+            response = supabase.table("user").select("*").eq("email", email).execute()
+            user_id = response.data[0].get("id")
 
         # Redirect user to frontend after login
-        return redirect(f"{FRONTEND_REDIRECT_URI}?success=1")
+        return redirect(f"{FRONTEND_REDIRECT_URI}?success={user_id}")
     else:
         return redirect(f"{FRONTEND_REDIRECT_URI}?error=failed_to_authenticate")
 
@@ -325,28 +342,23 @@ def generate_roadmap():
             print(end_date)
 
             # Process company-rationale mapping safely
-            companies = cleaned_experience.get("companies", [])
-            print(companies)
-            rationales = cleaned_experience.get("company_rationale", [])
-            print(rationales)
+            company = cleaned_experience.get("company", "Unknown Company")
+            print(company)
+            summary = cleaned_experience.get("summary", "Empty Summary")
+            print(summary)
 
-            for i in range(len(companies)):
-                print(companies[i])
-                print(rationales[i])
-                experience_data = {
-                    "company": companies[i],
-                    "position": position,
-                    "start_date": start_date,
-                    "end_date": end_date,  # Set to NULL if not available
-                    "summary": rationales[i],  # Store rationale as summary
-                    "in_resume": False  # Set to False for all
-                }
+            experience_data = {
+                "company": company,
+                "position": position,
+                "start_date": start_date,
+                "end_date": end_date,  # Set to NULL if not available
+                "summary": summary,  # Store rationale as summary
+                "in_resume": True  # Set to True for all
+            }
 
-                response = supabase.table("experience").select("*").execute()
+            print(experience_data)
 
-                print(experience_data)
-
-                response = supabase.table("experience").insert([experience_data]).execute()
+            response = supabase.table("experience").insert([experience_data]).execute()
 
         print("here")
         for roadmap in as_dict["career_roadmap"]:
