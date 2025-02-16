@@ -424,7 +424,7 @@ export default function ExperienceTimeline() {
           <div className="text-center">
             <div className="flex justify-center">
               <img
-                // src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png"
+                src={profilePicture}
                 alt="User Photo"
                 className="h-24 w-24 rounded-full mb-4 object-cover border-4 border-gradient-to-b from-gray-900 to-black"
               />

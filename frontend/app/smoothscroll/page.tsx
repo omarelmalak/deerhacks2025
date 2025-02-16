@@ -201,7 +201,7 @@ export default function SmoothScroll() {
             value={inputValue}
             onChange={handleInputChange}
             className="p-4 w-3/4 md:w-1/2 text-lg rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
-            placeholder="Enter your text here"
+            placeholder="I want to work at Google as a Software Engineer"
           />
           <button
             type="submit"
@@ -355,9 +355,9 @@ const CenterCard = () => {
       }}
     >
       <div className="flex flex-col items-center text-center">
-        {/* Profile Image */}
+
         <img
-        //   src={profilePicture}
+          src={profilePicture}
           alt="Profile"
           className="w-32 h-32 rounded-full border-4 border-gray-300 mb-4"
         />
