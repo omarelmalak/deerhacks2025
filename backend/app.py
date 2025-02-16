@@ -335,6 +335,16 @@ def generate_roadmap():
 
 
         print("here")
+
+        print("res")
+        roadmap_response = supabase.table('roadmap').insert({
+            'user_id': user_id
+        }).execute()
+
+        # Get newly created roadmap_id
+        roadmap_id = roadmap_response.data[0]['id']
+        print(f"New roadmap created for user {user_id} with ID: {roadmap_id}")
+
         for cleaned_experience in as_dict["cleaned_experiences"]:
             print("here now")
             position = cleaned_experience.get("position", "Unknown Position")
@@ -356,7 +366,8 @@ def generate_roadmap():
                 "start_date": start_date,
                 "end_date": end_date,  # Set to NULL if not available
                 "summary": summary,  # Store rationale as summary
-                "in_resume": True  # Set to True for all
+                "in_resume": True,  # Set to True for all
+                "roadmap_id": roadmap_id
             }
 
             print(experience_data)
@@ -364,11 +375,13 @@ def generate_roadmap():
             response = supabase.table("experience").insert([experience_data]).execute()
 
 
+        print("\n\nCAREER ROAD_MAP")
+        print(career_roadmap)
+        print("\n\n")
 
 
         print("here")
         for roadmap in as_dict["career_roadmap"]:
-            id = uuid.uuid4()
             print("here now")
             position = roadmap.get("position", "Unknown Position")
             print(position)
@@ -393,29 +406,73 @@ def generate_roadmap():
                     "end_date": end_date,  # Set to NULL if not available
                     "summary": rationales[i],  # Store rationale as summary
                     "in_resume": False,
-                    "roadmap_id": id 
+                    "roadmap_id": roadmap_id
                 }
+
+
+
 
                 response = supabase.table("experience").select("*").execute()
 
                 print(experience_data)
-
                 response = supabase.table("experience").insert([experience_data]).execute()
+                print("response for experience", response)
+                # response = supabase.table("roadmap").insert([])
 
-                response = (
-                    supabase.table("user")
-                    .update({
-                        "roadmap_ids": supabase.sql("array_append(roadmap_ids, %s)", id)
-                    })
-                    .eq("id", user_id)
-                    .execute()
-                )
 
 
 
         return json_data
     except (json.JSONDecodeError, Exception) as e:
         return jsonify({'error': f'Parsing error: {str(e)}', 'raw_output': generated_text}), 500
+
+@app.route('/get-roadmaps/<user_id>', methods=['GET'])
+def get_user_roadmaps(user_id):
+    """Get all roadmaps for a specific user."""
+    try:
+        # Step 1: Query roadmaps linked to the user
+        response = (
+            supabase.table('roadmap')
+            .select('*')
+            .eq('user_id', user_id)
+            .execute()
+        )
+
+        if not response.data:
+            return jsonify({"message": "No roadmaps found for this user."}), 404
+
+        roadmaps = response.data
+
+        return jsonify({
+            "user_id": user_id,
+            "roadmaps": roadmaps
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/get-experiences/<roadmap_id>', methods=['GET'])
+def get_roadmap_experiences(roadmap_id):
+    """Get all experiences for a specific roadmap."""
+    try:
+        response = (
+            supabase.table('experience')
+            .select('*')
+            .eq('roadmap_id', roadmap_id)
+            .execute()
+        )
+
+        if not response.data:
+            return jsonify({"message": "No experiences found for this roadmap."}), 404
+
+        experiences = response.data
+
+        return jsonify({
+            "roadmap_id": roadmap_id,
+            "experiences": experiences
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
