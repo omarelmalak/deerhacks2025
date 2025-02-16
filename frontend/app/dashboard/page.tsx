@@ -35,7 +35,7 @@ const ResumeUpload: React.FC = () => {
 
     const handleGenerateRoadmap = async (experiences: any[]) => {
         try {
-            const response = await axios.post("http://127.0.0.1:5000/generate-roadmap", { experiences, desiredRole, desiredCompany });
+            const response = await axios.post("http://127.0.0.1:5000/generate-roadmap", { experiences, desiredRole, desiredCompany, user_id: localStorage.getItem("user_id") });
             console.log("API Response:", response.data);
 
             // Ensure correct data assignment
