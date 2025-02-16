@@ -63,7 +63,7 @@ def linkedin_callback():
         print(access_token)
 
         # LinkedIn API URL to get the user's profile
-        profile_url = 'https://api.linkedin.com/v2/me'
+        profile_url = 'https://api.linkedin.com/v2/userinfo'
 
         headers = {
             'Authorization': f'Bearer {access_token}'
@@ -136,6 +136,7 @@ def parse_resume():
         }
 
         response = requests.post(COHERE_API_URL, json=payload, headers=headers)
+
         response_data = response.json()
 
         generated_text = response_data.get('generations', [{}])[0].get('text', '')
@@ -161,6 +162,7 @@ def parse_resume():
 def generate_roadmap():
     data = request.json
     experiences = data.get('experiences', [])
+
     user_goal_company = data.get('desiredCompany')
     user_goal_role = data.get('desiredRole')
 
@@ -311,6 +313,41 @@ def generate_roadmap():
 
         as_dict = json_data.get_json()
 
+
+        print("here")
+        for cleaned_experience in as_dict["cleaned_experiences"]:
+            print("here now")
+            position = cleaned_experience.get("position", "Unknown Position")
+            print(position)
+            start_date = cleaned_experience.get("start_date", "Unknown Start Date")
+            print(start_date)
+            end_date = cleaned_experience.get("end_date", "Present")  # Set None if missing
+            print(end_date)
+
+            # Process company-rationale mapping safely
+            companies = cleaned_experience.get("companies", [])
+            print(companies)
+            rationales = cleaned_experience.get("company_rationale", [])
+            print(rationales)
+
+            for i in range(len(companies)):
+                print(companies[i])
+                print(rationales[i])
+                experience_data = {
+                    "company": companies[i],
+                    "position": position,
+                    "start_date": start_date,
+                    "end_date": end_date,  # Set to NULL if not available
+                    "summary": rationales[i],  # Store rationale as summary
+                    "in_resume": False  # Set to False for all
+                }
+
+                response = supabase.table("experience").select("*").execute()
+
+                print(experience_data)
+
+                response = supabase.table("experience").insert([experience_data]).execute()
+
         print("here")
         for roadmap in as_dict["career_roadmap"]:
             print("here now")
@@ -345,7 +382,6 @@ def generate_roadmap():
 
                 response = supabase.table("experience").insert([experience_data]).execute()
 
-                print(response)
 
 
         return json_data
