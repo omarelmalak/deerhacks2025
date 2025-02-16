@@ -2,6 +2,8 @@ import json
 import requests
 from flask import Blueprint, request, jsonify
 
+from services.supabase_service import get_cleaned_experience
+
 experiences_bp = Blueprint('experiences_bp', __name__)
 
 @experiences_bp.route('/generate-cleaned-experiences', methods=['POST'])

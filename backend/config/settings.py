@@ -1,7 +1,4 @@
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 COHERE_API_KEY = '86GngtGqjEgRBd8njQkXQ9fl4LcRWY9dhpwY1vvs'
 COHERE_API_URL = 'https://api.cohere.ai/v1/generate'
