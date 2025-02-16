@@ -8,6 +8,7 @@ import {
 import { useRef, useState, useEffect, FormEvent } from "react";
 import { Poppins } from "next/font/google";
 import axios from "axios";
+import { redirect } from "next/navigation";
 
 interface Experience {
   id: number;
@@ -107,6 +108,9 @@ export default function SmoothScroll() {
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [showUploadSuccess, setShowUploadSuccess] = useState<boolean>(false);
+
 
   const userId = localStorage.getItem("user_id");
 
@@ -124,6 +128,7 @@ export default function SmoothScroll() {
     } catch (error) {
       console.error("Error retrieving user experiences:", error);
     }
+    
   };
 
   useEffect(() => {
@@ -140,7 +145,10 @@ export default function SmoothScroll() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
+
       const response = await axios.post(
         "http://127.0.0.1:5000/generate-roadmap",
         {
@@ -151,8 +159,13 @@ export default function SmoothScroll() {
 
       setRoadmaps(response.data.career_roadmap || []);
       setInputValue("");
+
     } catch (error) {
       console.error("Error generating roadmap:", error);
+    }finally {
+        setLoading(false);
+        setShowUploadSuccess(true);
+        redirect(`/roadmaps/${roadmaps[0]?.id}`);
     }
   };
   const fetchRoadmaps = async () => {
@@ -196,9 +209,15 @@ export default function SmoothScroll() {
           >
             Submit
           </button>
+          {loading && (
+                <div className="mt-6 text-center">
+                    <div className="spinner-border text-blue-500 animate-spin inline-block w-8 h-8 border-4 border-t-transparent border-solid rounded-full"></div>
+                    <p className="mt-4 text-neutral-400">Generating roadmap...</p>
+                </div>
+            )}
+
         </form>
-      </div>
-      <div className="flex overflow-x-auto space-x-6 p-4">
+        <div className="flex overflow-x-auto space-x-6 p-4">
         {roadmaps.length > 0 ? (
           roadmaps.map((roadmap) => (
             <a href={`/roadmaps/${roadmap.id}`} key={roadmap.id}>
@@ -219,6 +238,7 @@ export default function SmoothScroll() {
                       {company}
                     </p>
                   ))}
+                  
                 </div>
                 {roadmap.duration && (
                   <div className="text-gray-500 text-sm font-medium mb-2">
@@ -234,6 +254,8 @@ export default function SmoothScroll() {
           </div>
         )}
       </div>
+      </div>
+     
     </div>
   );
 }
@@ -335,7 +357,7 @@ const CenterCard = () => {
       <div className="flex flex-col items-center text-center">
         {/* Profile Image */}
         <img
-          src={profilePicture}
+        //   src={profilePicture}
           alt="Profile"
           className="w-32 h-32 rounded-full border-4 border-gray-300 mb-4"
         />
@@ -355,7 +377,7 @@ const CenterCard = () => {
             transition={{ duration: 0.6, ease: "easeInOut" }}
             className="block bg-gradient-to-r from-orange-500 to-red-800 text-transparent bg-clip-text"
           >
-            {experiences[index]?.position}
+            {experiences && experiences[index]?.position}
           </motion.span>
         </p>
       </div>

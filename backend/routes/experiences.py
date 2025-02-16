@@ -12,7 +12,7 @@ def generate_cleaned_experiences():
 
     data = request.json
     experiences = data.get('experiences', [])
-    print("experiencies from cleaned", experiences)
+    print("experiencies before cleaned", experiences)
     user_id = data.get('user_id', None)
     if not experiences:
         return jsonify({'error': 'No experiences provided'}), 400
@@ -31,7 +31,7 @@ def generate_cleaned_experiences():
 
     cleaned_experiences_json = f"""
             {{
-              "cleaned_experiences": [
+              "[
                 {{
                   "company": "{amazon_company}",
                   "position": "{amazon_position}",
@@ -51,11 +51,11 @@ def generate_cleaned_experiences():
             """
 
     prompt = f""" You are a career assistant. Clean and summarize the following professional experiences. Any 
-    projects should have "Project" for its company key. Return ONLY the information with the following JSON format: 
+    projects should have "Project" for its company key.Return only valid JSON, with no extra text or disclaimers, formatted like:  
     "cleaned_experiences": {cleaned_experiences_json}
-
-        Experiences:
-        {experiences}
+    \n\n
+        These are my experiences:
+        {experiences.get('work_experience', [])}
         """
     headers = {
         'Authorization': f'Bearer {COHERE_API_KEY}',
@@ -70,13 +70,25 @@ def generate_cleaned_experiences():
     print("we here")
     try:
         response = requests.post("https://api.cohere.ai/v1/generate", json=payload, headers=headers)
-        print(response)
+        print("\n\nresponse: ", response)
         response_data = response.json()
-        print(response_data)
+        print("response_data", response_data)
         text = response_data.get('generations', [{}])[0].get('text', '')
-        parsed = json.loads(text)
+        print("\n\ntext", type(text), text, "\n\n")
+        try:
+            parsed = json.loads(text)
+            print("\nParsed object:\n", parsed)
+            cleaned_experiences = parsed.get('cleaned_experiences', [])
+            print("\ncleaned_experiences:\n", cleaned_experiences)
+        except json.JSONDecodeError as e:
+            print("Could not parse text as valid JSON.\nError was:", e)
+        print("\n\n\nparsed ", parsed, "\n\n")
         cleaned_experiences = parsed.get('cleaned_experiences', [])
 
+        print("\n\ncleaned_experiences", cleaned_experiences, "\n\n")
+        cleaned_experiences_json = json.dumps(cleaned_experiences, indent=2)
+
+        print("CLEANED \n\n", cleaned_experiences_json)
         for exp in cleaned_experiences:
             supabase.table("experience").insert([{
                 "company": exp.get("company", ""),

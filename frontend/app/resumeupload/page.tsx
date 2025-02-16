@@ -75,9 +75,10 @@ const ResumeUploadPage = () => {
 
                 const parseResult = await parseResponse.json();
                 if (!parseResponse.ok) {
-                    alert(`Failed to parse resume: ${parseResult.error}`);
+                    // alert(`Failed to parse resume: ${parseResult.error}`);
                     return;
                 }
+                console.log(parseResult);
 
                 const cleanedResponse = await fetch("http://localhost:5000/generate-cleaned-experiences", {
                     method: "POST",
@@ -93,15 +94,15 @@ const ResumeUploadPage = () => {
                 const cleanedResult = await cleanedResponse.json();
                 if (cleanedResponse.ok) {
                     console.log("Cleaned Experiences:", cleanedResult.cleaned_experiences);
-                    alert("Experiences cleaned and saved successfully!");
+                    // alert("Experiences cleaned and saved successfully!");
+                    redirect('/smoothscroll');
                 } else {
                     console.error("Error cleaning experiences:", cleanedResult.error);
-                    alert(`Failed to clean experiences: ${cleanedResult.error}`);
+                    // alert(`Failed to clean experiences: ${cleanedResult.error}`);
                 }
-                redirect('/dashboard');
             } catch (error) {
                 console.error("Network error:", error);
-                alert("Network error. Please try again.");
+                // alert("Network error. Please try again.");
             } finally {
                 setLoading(false);
                 setShowUploadSuccess(true);

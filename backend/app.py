@@ -81,9 +81,11 @@ def parse_resume():
         response = requests.post(COHERE_API_URL, json=payload, headers=headers)
         response_data = response.json()
         generated_text = response_data.get('generations', [{}])[0].get('text', '')
+        print(generated_text)
         try:
             if isinstance(generated_text, str) and generated_text.strip().startswith('{'):
                 parsed_resume = json.loads(generated_text)
+                print("parsed_resume", parsed_resume)
             else:
                 raise json.JSONDecodeError("Invalid JSON", generated_text, 0)
         except json.JSONDecodeError:

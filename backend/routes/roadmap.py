@@ -76,14 +76,15 @@ def generate_roadmap():
 
     user_goal_role= "i want to work at google as a CTO"
 
-    prompt = f""" Generate a clear and concise career roadmap to help me reach my goal role. This is what I am 
-    looking for {user_prompt}. Use my experience history ("cleaned_experiences") as a foundation, and structure the 
-    roadmap into distinct phases, each representing a career step with corresponding company names and role details. 
-    Ensure the roadmap is realistic and achievable, with a timeline that starts at least six months from the present 
-    and progresses upward in terms of responsibility and prestige. Be very realistic with the timelines. For example, 
-    I cant get to CTO position in 5 years if i have little experience. Each phase should have a unique start and end 
-    date, with the final entry having an open-ended "present" end date as the long-term goal. Account for my previous 
-    experiences and provide a path that builds upon them coherently.
+    prompt = f""" Generate a career roadmap from my current experience history, which is parsed below under 
+    "cleaned_experiences", to {user_prompt }. This roadmap should be based on my previous experiences. Structure the roadmap into clear 
+       phases, each showing a career step with company name and that stuff. Make it short and clear. "career_roadmap" 
+       should contain the companies (OTHER THAN THE ONES I ALREADY HAVE) that I should aim to {user_prompt} The phases and timelines should start realistic and should start atleast 
+       6 months from today. The timeline (start and end dates) should be different depending on the goal role and 
+       company. For example, you can't expect me to get an Apple internship right away if I have 0 internship 
+       experience. You also can't expect me to get a CTO Position within 3 years if I have 0 previous experience. 
+       However, my career should only go up (i.e. I should not go from intern to full time and back to intern) The final 
+       entry should just have a start date and the end date should be "present" because that should be the final goal.
 
 
 
@@ -230,6 +231,9 @@ def generate_roadmap():
                 response = supabase.table("experience").insert([experience_data]).execute()
                 print("response for experience", response)
                 print("user prompt", user_prompt)
+        json_data = jsonify({'cleaned_experiences': cleaned_experiences, 'career_roadmap': career_roadmap,
+                             'duration': roadmap_duration, 'companies': roadmap_companies, "title": roadmap_title,
+                             "id": roadmap_id})
 
         return json_data
     except (json.JSONDecodeError, Exception) as e:

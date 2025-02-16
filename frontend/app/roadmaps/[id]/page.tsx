@@ -1,16 +1,15 @@
 "use client";
 
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useLayoutEffect,
-  FC,
-} from "react";
+import React, { useEffect, useRef, useState, useLayoutEffect, FC } from "react";
 import { gsap } from "gsap";
 import { Bungee, Inter } from "next/font/google";
 import ScrollTrigger from "gsap/ScrollTrigger";
-import { useRouter, useSearchParams, usePathname, useParams } from "next/navigation";
+import {
+  useRouter,
+  useSearchParams,
+  usePathname,
+  useParams,
+} from "next/navigation";
 import axios from "axios";
 import { useSwipeable } from "react-swipeable";
 
@@ -90,9 +89,13 @@ const SwipeableConceptCarousel: FC<{ experiences: Experience[] }> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const handlers = useSwipeable({
     onSwipedLeft: () =>
-      setCurrentIndex((prev) => (prev === experiences.length - 1 ? 0 : prev + 1)),
+      setCurrentIndex((prev) =>
+        prev === experiences.length - 1 ? 0 : prev + 1
+      ),
     onSwipedRight: () =>
-      setCurrentIndex((prev) => (prev === 0 ? experiences.length - 1 : prev - 1)),
+      setCurrentIndex((prev) =>
+        prev === 0 ? experiences.length - 1 : prev - 1
+      ),
     preventScrollOnSwipe: true,
     trackMouse: true,
   });
@@ -154,7 +157,7 @@ const SwipeableConceptCarousel: FC<{ experiences: Experience[] }> = ({
           className="px-1 py-0.5 bg-gray-200 rounded-full hover:bg-gray-300 text-sm"
         >
           {">"}
-          </button>
+        </button>
       </div>
       <style jsx>{`
         div::before {
@@ -268,19 +271,24 @@ export default function ExperienceTimeline() {
   const userCardRef = useRef<HTMLDivElement | null>(null);
   const lineRef = useRef<HTMLDivElement | null>(null);
   const [experiences, setExperiences] = useState<Experience[]>([]);
-  const [roadmapExperiences, setRoadmapExperiences] = useState<Experience[]>([]);
+  const [roadmapExperiences, setRoadmapExperiences] = useState<Experience[]>(
+    []
+  );
   const [userRoadmaps, setUserRoadmaps] = useState([]);
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
+  const [profilePicture, setProfilePicture] = useState<string>("");
   const router = useRouter();
   const searchParams = useSearchParams();
   const success = searchParams.get("success");
   const timelineItems = buildTimeline(experiences);
 
   const pathname = usePathname();
-  const segments = pathname.split('/').filter(Boolean);
+  const segments = pathname.split("/").filter(Boolean);
 
   segments.splice(-1);
 
-  const newPathname = '/' + segments.join('/');
+  const newPathname = "/" + segments.join("/");
 
   const { id } = useParams();
   const handleGetUserRoadmaps = async () => {
@@ -292,9 +300,29 @@ export default function ExperienceTimeline() {
     } catch (error) {}
   };
 
+  const getProfileInformation = async () => {
+    try {
+      const userid = localStorage.getItem("user_id");
+      const response = await fetch(
+        `http://localhost:5000/getprofile/${Number(userid)}`
+      );
+      const data = await response.json();
+
+      const { first_name, last_name, profile_picture } = data;
+
+      setFirstName(first_name);
+      setLastName(last_name);
+      setProfilePicture(profile_picture);
+    } catch (error) {
+      console.error("Error retrieving user LinkedIn information:", error);
+    }
+  };
+
   const handleGetRoadmapExperiences = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:5000/get-experiences/${id}`);
+      const response = await axios.get(
+        `http://127.0.0.1:5000/get-experiences/${id}`
+      );
       const sortedExperiences: Experience[] = response.data.experiences.sort(
         (a: Experience, b: Experience) =>
           new Date(a.end_date).getTime() - new Date(b.end_date).getTime()
@@ -304,22 +332,26 @@ export default function ExperienceTimeline() {
       setExperiences(sortedExperiences);
 
       console.log(roadmapExperiences);
-
     } catch (error) {}
   };
 
   if (success) {
     localStorage.setItem("user_id", success.toString());
-  } 
+  }
 
   useEffect(() => {
     if (success) {
       localStorage.setItem("user_id", success.toString());
-    } 
+    }
     handleGetRoadmapExperiences();
+    getProfileInformation();
+
   }, []);
 
-  useEffect(() => {console.log(experiences);}, [experiences]);
+  useEffect(() => {
+    console.log(experiences);
+
+  }, [experiences]);
 
   useLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -392,17 +424,17 @@ export default function ExperienceTimeline() {
           <div className="text-center">
             <div className="flex justify-center">
               <img
-                src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png"
+                // src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png"
                 alt="User Photo"
                 className="h-24 w-24 rounded-full mb-4 object-cover border-4 border-gradient-to-b from-gray-900 to-black"
               />
             </div>
-            <h3 className="text-xl font-bold text-gray-800">John Doe</h3>
-            <p className="text-sm text-gray-500">Full Stack Developer</p>
-            <p className="text-xs text-gray-400 italic">2021 - Present</p>
-            <p className="text-black">
+            <h3 className="text-xl font-bold text-gray-800">{firstName} {lastName}</h3>
+            <p className="text-sm text-gray-500">{experiences && experiences[0]?.position}</p>
+            {/* <p className="text-xs text-gray-400 italic">2021 - Present</p> */}
+            {/* <p className="text-black">
               LOCAL STORAGE CONTENT: {localStorage.getItem("user_id")}
-            </p>
+            </p> */}
           </div>
         </div>
       </div>
