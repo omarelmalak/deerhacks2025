@@ -6,88 +6,90 @@ interface Experience {
     id: number;
     company: string;
     position: string;
-    logo: string;
-    description: string;
     start_date: string;
     end_date: string;
     summary: string;
     in_resume: boolean;
+    roadmap_id?: number;
+    user_id?: number;
 }
 
-const mockExperiences: Experience[] = [
-    {
-        id: 1,
-        company: "TechCorp",
-        position: "Software Engineer",
-        logo: "https://example.com/logo1.png",
-        description: "Developing innovative software solutions for the financial sector.",
-        start_date: "2021-01-01",
-        end_date: "2022-12-31",
-        summary: "Led the development of key features in the company's core product, improving system performance by 25%.",
-        in_resume: true,
-    },
-    {
-        id: 2,
-        company: "InnovateX",
-        position: "Frontend Developer",
-        logo: "https://example.com/logo2.png",
-        description: "Building user-friendly web applications with modern JavaScript frameworks.",
-        start_date: "2020-06-01",
-        end_date: "2021-12-31",
-        summary: "Worked closely with UX/UI designers to create seamless user interfaces, increasing user engagement by 30%.",
-        in_resume: true,
-    },
-    {
-        id: 3,
-        company: "DevSolutions",
-        position: "Junior Backend Developer",
-        logo: "https://example.com/logo3.png",
-        description: "Collaborated on backend services for various e-commerce platforms.",
-        start_date: "2019-03-01",
-        end_date: "2020-05-31",
-        summary: "Helped optimize database queries and APIs, which resulted in a 20% reduction in response times.",
-        in_resume: false,
-    },
-    {
-        id: 4,
-        company: "CreativeLabs",
-        position: "Intern - Full Stack Developer",
-        logo: "https://example.com/logo4.png",
-        description: "Assisted in both frontend and backend tasks for a variety of projects.",
-        start_date: "2018-06-01",
-        end_date: "2018-08-31",
-        summary: "Contributed to the development of an internal tool that streamlined communication between teams.",
-        in_resume: true,
-    },
-    {
-        id: 5,
-        company: "CreativeLabs",
-        position: "Intern - Full Stack Developer",
-        logo: "https://example.com/logo4.png",
-        description: "Assisted in both frontend and backend tasks for a variety of projects.",
-        start_date: "2018-06-01",
-        end_date: "2018-08-31",
-        summary: "Contributed to the development of an internal tool that streamlined communication between teams.",
-        in_resume: true,
-    },
-    {
-        id: 6,
-        company: "CreativeLabs",
-        position: "Intern - Full Stack Developer",
-        logo: "https://example.com/logo4.png",
-        description: "Assisted in both frontend and backend tasks for a variety of projects.",
-        start_date: "2018-06-01",
-        end_date: "2018-08-31",
-        summary: "Contributed to the development of an internal tool that streamlined communication between teams.",
-        in_resume: true,
-    },
-];
+// const mockExperiences: Experience[] = [
+//     {
+//         id: 1,
+//         company: "TechCorp",
+//         position: "Software Engineer",
+//         logo: "https://example.com/logo1.png",
+//         description: "Developing innovative software solutions for the financial sector.",
+//         start_date: "2021-01-01",
+//         end_date: "2022-12-31",
+//         summary: "Led the development of key features in the company's core product, improving system performance by 25%.",
+//         in_resume: true,
+//     },
+//     {
+//         id: 2,
+//         company: "InnovateX",
+//         position: "Frontend Developer",
+//         logo: "https://example.com/logo2.png",
+//         description: "Building user-friendly web applications with modern JavaScript frameworks.",
+//         start_date: "2020-06-01",
+//         end_date: "2021-12-31",
+//         summary: "Worked closely with UX/UI designers to create seamless user interfaces, increasing user engagement by 30%.",
+//         in_resume: true,
+//     },
+//     {
+//         id: 3,
+//         company: "DevSolutions",
+//         position: "Junior Backend Developer",
+//         logo: "https://example.com/logo3.png",
+//         description: "Collaborated on backend services for various e-commerce platforms.",
+//         start_date: "2019-03-01",
+//         end_date: "2020-05-31",
+//         summary: "Helped optimize database queries and APIs, which resulted in a 20% reduction in response times.",
+//         in_resume: false,
+//     },
+//     {
+//         id: 4,
+//         company: "CreativeLabs",
+//         position: "Intern - Full Stack Developer",
+//         logo: "https://example.com/logo4.png",
+//         description: "Assisted in both frontend and backend tasks for a variety of projects.",
+//         start_date: "2018-06-01",
+//         end_date: "2018-08-31",
+//         summary: "Contributed to the development of an internal tool that streamlined communication between teams.",
+//         in_resume: true,
+//     },
+//     {
+//         id: 5,
+//         company: "CreativeLabs",
+//         position: "Intern - Full Stack Developer",
+//         logo: "https://example.com/logo4.png",
+//         description: "Assisted in both frontend and backend tasks for a variety of projects.",
+//         start_date: "2018-06-01",
+//         end_date: "2018-08-31",
+//         summary: "Contributed to the development of an internal tool that streamlined communication between teams.",
+//         in_resume: true,
+//     },
+//     {
+//         id: 6,
+//         company: "CreativeLabs",
+//         position: "Intern - Full Stack Developer",
+//         logo: "https://example.com/logo4.png",
+//         description: "Assisted in both frontend and backend tasks for a variety of projects.",
+//         start_date: "2018-06-01",
+//         end_date: "2018-08-31",
+//         summary: "Contributed to the development of an internal tool that streamlined communication between teams.",
+//         in_resume: true,
+//     },
+// ];
 
 
 export default function SmoothScroll() {
     const [firstName, setFirstName] = useState<string>("");
     const [lastName, setLastName] = useState<string>("");
     const [profilePicture, setProfilePicture] = useState<string>("");
+
+    const [experiences, setExperiences] = useState<Experience[]>([]);
 
     const getProfileInformation = async () => {
         try {
@@ -108,14 +110,20 @@ export default function SmoothScroll() {
     const getUserExperiences = async () => {
         try {
             const userid = localStorage.getItem('user_id');
-            const response = await fetch(`http://localhost:5000/get-cleaned-experiences/${Number(userid)}`);
+            const response = await fetch(`http://localhost:5000/get-current-experiences/${parseInt(localStorage.getItem("user_id") || "0")}`);
             const data = await response.json();
 
-            console.log(data);
+            setExperiences(data.current_experiences)
+
+
         } catch (error) {
             console.error("Error retrieving user experiences:", error);
         }
     }
+
+    useEffect(() => {
+        console.log('Updated experiences state:', experiences);
+      }, [experiences]);
 
     useEffect(() => {
         getProfileInformation();
@@ -132,7 +140,7 @@ export default function SmoothScroll() {
                     </div>
                 </div>
             )}
-            <Hero />
+            <Hero experiences={experiences} />
             <div className="h-screen"></div>
         </div>
     );
@@ -140,11 +148,11 @@ export default function SmoothScroll() {
 
 const SECTION_HEIGHT = 1500;
 
-const Hero = () => {
+const Hero = ({ experiences }: { experiences: Experience[] }) => {
     return (
         <div className="relative w-full" style={{ height: `calc(${SECTION_HEIGHT}px + 100vh)` }}>
             <CenterCard />
-            <ParallaxCards />
+            <ParallaxCards experiences={experiences} />
             <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-b from-zinc-950/0 to-zinc-950"></div>
         </div>
     );
@@ -179,10 +187,10 @@ const CenterCard = () => {
     );
 }
 
-const ParallaxCards = () => {
+const ParallaxCards = ({ experiences }: { experiences: Experience[] }) => {
     return (
         <div className="relative mx-auto max-w-10xl px-4 pt-[200px] flex gap-16 justify-between">
-            {mockExperiences.map((experience, index) => {
+            {experiences && experiences.map((experience, index) => {
                 // Generate random start and end values for the parallax effect
                 const randomStart = Math.floor(Math.random() * 400) - 200; // Random number between -200 and 200
                 const randomEnd = Math.floor(Math.random() * 500) - 200; // Random number between -200 and 500
@@ -193,7 +201,7 @@ const ParallaxCards = () => {
                         start={randomStart}
                         end={randomEnd}
                         alt={`Card ${index + 1}`}
-                        className={`w-full md:w-1/3 lg:w-1/4`} // Responsive width: full on small screens, 1/3 on medium, and 1/4 on large
+                        className={`w-full md:w-1/3 lg:w-1/4`} 
                         experience={experience}
                     />
                 );
