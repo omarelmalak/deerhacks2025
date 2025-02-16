@@ -1,13 +1,12 @@
 import json
 
 import requests
-import supabase
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import cloudinary
 import cloudinary.uploader
 from PyPDF2 import PdfReader
-
+from supabase import create_client, Client
 
 cloudinary.config(
     cloud_name = "dnc2tvpnn",
@@ -28,6 +27,8 @@ URL_ENDPOINT = 'https://api.apilayer.com/resume_parser/url'
 
 SUPABASE_URL = 'https://voenczphlgojgihwbcwi.supabase.co'
 SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZW5jenBobGdvamdpaHdiY3dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2MDM0NzgsImV4cCI6MjA1NTE3OTQ3OH0.WASlZSz_mSEyxlDZxDhUWZOdQp9JG0n7IHvE0Y8Mo6Y'
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 
 @app.route('/parse-resume', methods=['POST'])
 def parse_resume():
@@ -247,29 +248,42 @@ def generate_roadmap():
 
         json_data = jsonify({'cleaned_experiences': cleaned_experiences, 'career_roadmap': career_roadmap})
 
-        for roadmap in response_data["career_roadmap"]:
-            for company_list, rationale in zip(roadmap["companies"], roadmap["company_rationale"]):
-                for i in range(len(company_list)):
-                    # Prepare data for insertion
-                    experience_data = {
-                        "company": company_list[i],
-                        "position": roadmap["position"],
-                        "start_date": roadmap["start_date"],
-                        "end_date": roadmap.get("end_date", None),  # Set to NULL if not available
-                        "summary": rationale,  # Store rationale as summary
-                        "in_resume": False  # Set to False for all
-                    }
+        as_dict = json_data.get_json()
 
-                    print(experience_data)
+        print("here")
+        for roadmap in as_dict["career_roadmap"]:
+            print("here now")
+            position = roadmap.get("position", "Unknown Position")
+            print(position)
+            start_date = roadmap.get("start_date", "Unknown Start Date")
+            print(start_date)
+            end_date = roadmap.get("end_date", None)  # Set None if missing
+            print(end_date)
 
-                    # Insert into Supabase
-                    response = supabase.table("experience").insert(experience_data).execute()
+            # Process company-rationale mapping safely
+            companies = roadmap.get("companies", [])
+            print(companies)
+            rationales = roadmap.get("company_rationale", [])
+            print(rationales)
 
-                    # Check for errors
-                    if response.get("error"):
-                        print(f"Error inserting {company}: {response['error']}")
-                    else:
-                        print(f"Inserted {company} into experience table.")
+            for i in range(len(companies)):
+                print(companies[i])
+                print(rationales[i])
+                experience_data = {
+                    "company": companies[i],
+                    "position": position,
+                    "start_date": start_date,
+                    "end_date": end_date,  # Set to NULL if not available
+                    "summary": rationales[i],  # Store rationale as summary
+                    "in_resume": False  # Set to False for all
+                }
+
+                print(experience_data)
+
+                response = supabase.table("experience").insert([experience_data]).execute()
+
+                print(response.json())
+
 
         return json_data
     except (json.JSONDecodeError, Exception) as e:
