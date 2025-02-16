@@ -33,7 +33,7 @@ SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-app.secret_key = 'WPL_AP1.vFgMgRskVtKfk2hP.RcATFw=='  # Keep this safe
+app.secret_key = 'WPL_AP1.vFgMgRskVtKfk2hP.RcATFw=='
 CLIENT_ID = '778z82h4dtgrrz'
 CLIENT_SECRET = 'WPL_AP1.vFgMgRskVtKfk2hP.RcATFw=='
 REDIRECT_URI = 'http%3A%2F%2F127.0.0.1%3A5000%2Flinkedin-openid%2Fcallback'  # No spaces
@@ -58,12 +58,15 @@ def parse_resume():
         if not extracted_text.strip():
             return jsonify({'error': 'Could not extract text'}), 400
 
-        prompt = f"""
-         You are a resume parsing assistant. Extract details from resume text:
-         Full Name, Email, Phone, Summary, Work Experience, Education, Skills.
-         Return ONLY valid JSON with keys: name, email, phone, summary, work_experience, education, skills.
-         Resume Text:
-         {extracted_text}
+        prompt = f""" You are a resume parsing assistant. Extract the following information from the resume provided, 
+        and include any projects under "work_experience".: - Full Name - Email - Phone Number - Summary - Work 
+        Experience (for each: company name, title, dates, responsibilities) - Education (for each: institution, 
+        degree, dates) - Skills
+
+        Return ONLY the information in valid JSON format with keys: "name", "email", "phone", "summary", "work_experience", "education", "skills".
+
+        Resume Text:
+        {extracted_text}
         """
         headers = {
             'Authorization': f'Bearer {COHERE_API_KEY}',
