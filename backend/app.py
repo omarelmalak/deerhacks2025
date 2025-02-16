@@ -37,7 +37,7 @@ CLIENT_ID = '778z82h4dtgrrz'
 CLIENT_SECRET = 'WPL_AP1.vFgMgRskVtKfk2hP.RcATFw=='
 REDIRECT_URI = 'http%3A%2F%2F127.0.0.1%3A5000%2Flinkedin-openid%2Fcallback'  # No spaces
 BACKEND_REDIRECT_URI = 'http://127.0.0.1:5000/linkedin-openid/callback'  # Backend receives code
-FRONTEND_REDIRECT_URI = 'http://localhost:3000/'  # Where the user will go after login
+FRONTEND_REDIRECT_URI = 'http://localhost:3000/resumeupload'  # Where the user will go after login
 
 @app.route('/linkedin-openid/callback')
 def linkedin_callback():
@@ -399,6 +399,19 @@ def generate_roadmap():
         return json_data
     except (json.JSONDecodeError, Exception) as e:
         return jsonify({'error': f'Parsing error: {str(e)}', 'raw_output': generated_text}), 500
+
+
+@app.route('/getprofile/<id>', methods=['GET'])
+def get_profile_information(id):
+    # Fetch user profile from Supabase based on the provided id
+    user_response = supabase.table("user").select("*").eq("id", id).execute()
+
+    # Check if user exists
+    if user_response.data:
+        user = user_response.data[0]  # Get the first user (since .eq() returns a list)
+        return jsonify(user), 200  # Return user data as JSON with a 200 OK status
+    else:
+        return jsonify({"error": "User not found"}), 404
 
 
 if __name__ == '__main__':
