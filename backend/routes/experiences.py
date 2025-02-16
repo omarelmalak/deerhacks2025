@@ -102,3 +102,20 @@ def get_roadmap_experiences(roadmap_id):
         return jsonify({"roadmap_id": roadmap_id, "experiences": response.data}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@experiences_bp.route('/get-current-experiences/<user_id>', methods=['GET'])
+def get_current_experiences(user_id):
+    from services import supabase_service
+    try:
+        response = supabase_service.get_cleaned_experience(user_id)
+
+        if not response.data:
+            return jsonify({"message": "No current experiences found."}), 404
+
+        return jsonify({"user_id": user_id, "current_experiences": response.data}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
