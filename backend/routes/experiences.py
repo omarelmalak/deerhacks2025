@@ -2,6 +2,8 @@ import json
 import requests
 from flask import Blueprint, request, jsonify
 
+from services.supabase_service import get_cleaned_experience
+
 experiences_bp = Blueprint('experiences_bp', __name__)
 
 @experiences_bp.route('/generate-cleaned-experiences', methods=['POST'])
@@ -97,3 +99,10 @@ def get_roadmap_experiences(roadmap_id):
         return jsonify({"roadmap_id": roadmap_id, "experiences": response.data}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@experiences_bp.route('/get-cleaned-experiences/<user_id>', methods=['GET'])
+def get_cleaned_experiences(user_id):
+    # This line is indented properly now
+    response = get_cleaned_experience(user_id)
+    print(response)
+    return get_cleaned_experience(user_id)

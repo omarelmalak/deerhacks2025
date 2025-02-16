@@ -25,7 +25,7 @@ cloudinary.config(
 app = Flask(__name__)
 CORS(app)
 
-COHERE_API_KEY = 'mwsy5HzGiJGheLAxKNObW529C9deFV6RhbIF7RGU'
+COHERE_API_KEY = '86GngtGqjEgRBd8njQkXQ9fl4LcRWY9dhpwY1vvs'
 COHERE_API_URL = 'https://api.cohere.ai/v1/generate'
 
 SUPABASE_URL = 'https://voenczphlgojgihwbcwi.supabase.co'
@@ -38,7 +38,7 @@ CLIENT_ID = '778z82h4dtgrrz'
 CLIENT_SECRET = 'WPL_AP1.vFgMgRskVtKfk2hP.RcATFw=='
 REDIRECT_URI = 'http%3A%2F%2F127.0.0.1%3A5000%2Flinkedin-openid%2Fcallback'  # No spaces
 BACKEND_REDIRECT_URI = 'http://127.0.0.1:5000/linkedin-openid/callback'  # Backend receives code
-FRONTEND_REDIRECT_URI = 'http://localhost:3000/dashboard'
+FRONTEND_REDIRECT_URI = 'http://localhost:3000/resumeupload'
 
 
 @app.route('/parse-resume', methods=['POST'])

@@ -24,6 +24,8 @@ const ResumeUploadPage = () => {
     const searchParams = useSearchParams();
     const success = searchParams.get('success');
 
+    const router = useRouter();
+
     if (success) {
         localStorage.setItem('user_id', success.toString());
     } else {
@@ -56,26 +58,29 @@ const ResumeUploadPage = () => {
     }, []);
 
     const handleResumeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const userid = localStorage.getItem('user_id');
+        const as_number = (Number)(userid);
+
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setResume(file);
             setLoading(true);
-    
+
             const formData = new FormData();
             formData.append("file", file);
-    
+
             try {
                 const parseResponse = await fetch("http://localhost:5000/parse-resume", {
                     method: "POST",
                     body: formData,
                 });
-    
+
                 const parseResult = await parseResponse.json();
                 if (!parseResponse.ok) {
                     alert(`Failed to parse resume: ${parseResult.error}`);
                     return;
                 }
-    
+
                 const cleanedResponse = await fetch("http://localhost:5000/generate-cleaned-experiences", {
                     method: "POST",
                     headers: {
@@ -86,7 +91,7 @@ const ResumeUploadPage = () => {
                         user_id: parseInt(localStorage.getItem("user_id") || "0", 10),
                     }),
                 });
-    
+
                 const cleanedResult = await cleanedResponse.json();
                 if (cleanedResponse.ok) {
                     console.log("Cleaned Experiences:", cleanedResult.cleaned_experiences);
@@ -102,11 +107,12 @@ const ResumeUploadPage = () => {
             } finally {
                 setLoading(false);
                 setShowUploadSuccess(true);
+                router.push(`/smoothscroll`);
             }
         }
     };
-    
-    
+
+
 
     return (
         <div
@@ -159,13 +165,6 @@ const ResumeUploadPage = () => {
                 </div>
             )}
 
-            {/* Success Message */}
-            {showUploadSuccess && !loading && (
-                <div className="mt-6 text-center flex flex-col justify-center items-center">
-                    <CheckCircle size={40} color="green" />
-                    <p className="mt-4 text-lg text-neutral-400">Resume uploaded successfully!</p>
-                </div>
-            )}
 
             {/* Animations & Styles */}
             <style jsx>{`
