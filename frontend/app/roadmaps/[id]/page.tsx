@@ -30,12 +30,13 @@ interface Experience {
   id: number;
   company: string;
   position: string;
-  logo: string;
   description: string;
   start_date: string;
   end_date: string;
   summary: string;
   in_resume: boolean;
+  user_id: number;
+  roadmap_id?: number;
 }
 
 interface TimelineItem {
@@ -104,11 +105,11 @@ const SwipeableConceptCarousel: FC<{ experiences: Experience[] }> = ({
       <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 uppercase rounded-full">
         Upcoming ({currentIndex + 1}/{experiences.length})
       </div>
-      <img
+      {/* <img
         src={currentExp.logo}
         alt={currentExp.company}
         className="h-14 mb-4 object-contain opacity-95"
-      />
+      /> */}
       <h3 className="text-xl font-bold text-gray-800">{currentExp.position}</h3>
       <p className="text-sm text-gray-500">{currentExp.company}</p>
       <p className="text-xs text-gray-400 italic">
@@ -191,11 +192,11 @@ const ConceptCard: FC<{ experience: Experience }> = ({ experience }) => (
     <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 uppercase rounded-full">
       Upcoming
     </div>
-    <img
+    {/* <img
       src={experience.logo}
       alt={experience.company}
       className="h-14 mb-4 object-contain opacity-95"
-    />
+    /> */}
     <h3 className="text-xl font-bold text-gray-800">{experience.position}</h3>
     <p className="text-sm text-gray-500">{experience.company}</p>
     <p className="text-xs text-gray-400 italic">
@@ -241,11 +242,11 @@ const ConceptCard: FC<{ experience: Experience }> = ({ experience }) => (
 
 const NormalCard: FC<{ experience: Experience }> = ({ experience }) => (
   <div className="bg-white p-6 rounded-2xl shadow-2xl w-5/12 flex flex-col items-center transform transition-transform duration-300 hover:scale-105">
-    <img
+    {/* <img
       src={experience.logo}
       alt={experience.company}
       className="h-14 mb-4 object-contain"
-    />
+    /> */}
     <h3 className="text-xl font-bold text-gray-800">{experience.position}</h3>
     <p className="text-sm text-gray-500">{experience.company}</p>
     <p className="text-xs text-gray-400 italic">
@@ -267,7 +268,7 @@ export default function ExperienceTimeline() {
   const userCardRef = useRef<HTMLDivElement | null>(null);
   const lineRef = useRef<HTMLDivElement | null>(null);
   const [experiences, setExperiences] = useState<Experience[]>([]);
-  const [roadmapExperiences, setRoadmapExperiences] = useState([]);
+  const [roadmapExperiences, setRoadmapExperiences] = useState<Experience[]>([]);
   const [userRoadmaps, setUserRoadmaps] = useState([]);
   const router = useRouter();
   const searchParams = useSearchParams();
