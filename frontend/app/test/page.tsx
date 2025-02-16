@@ -10,6 +10,8 @@ const ResumeUpload: React.FC = () => {
   const [desiredRole, setDesiredRole] = useState<string>("");
   const [desiredCompany, setDesiredCompany] = useState<string>("");
 
+  const linkedInUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=778z82h4dtgrrz&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Flinkedin-openid%2Fcallback&scope=openid%20profile%20email`;
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length) {
       setFile(e.target.files[0]);
@@ -18,7 +20,7 @@ const ResumeUpload: React.FC = () => {
 
   const handleFileUpload = async () => {
     if (!file) return alert("Please select a resume file to upload.");
-    if(desiredRole === "" || desiredCompany === "") return alert("Please enter a desired role and company.");
+    if (desiredRole === "" || desiredCompany === "") return alert("Please enter a desired role and company.");
 
     const formData = new FormData();
     formData.append("file", file);
@@ -86,7 +88,7 @@ const ResumeUpload: React.FC = () => {
           </ul>
         </div>
       )}
-            <input
+      <input
         type="text"
         placeholder="Desired Role"
         value={desiredRole}
@@ -100,6 +102,10 @@ const ResumeUpload: React.FC = () => {
         onChange={(e) => setDesiredCompany(e.target.value)}
         className="w-full mb-4 p-2 border rounded"
       />
+
+      <a href={linkedInUrl}>
+        <button>Login with LinkedIn</button>
+      </a>
     </div>
   );
 };
