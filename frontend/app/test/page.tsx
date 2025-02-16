@@ -26,7 +26,7 @@ const ResumeUpload: React.FC = () => {
     formData.append("file", file);
 
     try {
-      const res = await axios.post("http://127.0.0.1:8000/parse-resume", formData);
+      const res = await axios.post("http://127.0.0.1:5000/parse-resume", formData);
       handleGenerateRoadmap(res.data.experiences || []);
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -35,7 +35,7 @@ const ResumeUpload: React.FC = () => {
 
   const handleGenerateRoadmap = async (experiences: any[]) => {
     try {
-      const response = await axios.post("http://127.0.0.1:8000/generate-roadmap", { experiences, desiredRole, desiredCompany });
+      const response = await axios.post("http://127.0.0.1:5000/generate-roadmap", { experiences, desiredRole, desiredCompany });
       console.log("API Response:", response.data);
 
       // Ensure correct data assignment
