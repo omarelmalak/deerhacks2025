@@ -121,3 +121,15 @@ def get_current_experiences(user_id):
         return jsonify({"error": str(e)}), 500
 
 
+@experiences_bp.route('/generate-user-summary/<user_id>', methods=['GET'])
+def generate_user_summary(user_id):
+    from services import supabase_service
+    response = supabase_service.get_cleaned_experience(user_id)
+
+
+
+    prompt = f""" The following is all of my experience. Give me a summary of my skills as a professional I can use
+    for a bio for myself:
+
+    
+           """

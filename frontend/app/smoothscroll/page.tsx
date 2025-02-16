@@ -1,6 +1,8 @@
 "use client";
 import { motion, useScroll, useTransform, useMotionTemplate } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
+import { Poppins } from "next/font/google";
+
 
 interface Experience {
     id: number;
@@ -13,6 +15,11 @@ interface Experience {
     roadmap_id?: number;
     user_id?: number;
 }
+
+const poppins = Poppins({
+    subsets: ["latin"],
+    weight: ["400"],
+});
 
 // const mockExperiences: Experience[] = [
 //     {
@@ -84,12 +91,105 @@ interface Experience {
 // ];
 
 
+
 export default function SmoothScroll() {
+    const [experiences, setExperiences] = useState<Experience[]>([]);
+    const [inputValue, setInputValue] = useState<string>('');
+
+    const getUserExperiences = async () => {
+        try {
+            const userid = localStorage.getItem('user_id');
+            const response = await fetch(`http://localhost:5000/get-current-experiences/${parseInt(localStorage.getItem("user_id") || "0")}`);
+            const data = await response.json();
+
+            setExperiences(data.current_experiences);
+        } catch (error) {
+            console.error("Error retrieving user experiences:", error);
+        }
+    };
+
+    useEffect(() => {
+        console.log('Updated experiences state:', experiences);
+    }, [experiences]);
+
+    useEffect(() => {
+        getUserExperiences();
+    }, []);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInputValue(e.target.value);
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        console.log("Submitted input:", inputValue);
+        // You can add logic here to save the input or send it to an API
+        setInputValue(''); // Reset the input field after submission
+    };
+
+    return (
+        <div className={`bg-gradient-to-b from-gray-900 to-black p-8 text-white ${poppins.className}`}>
+            <Hero experiences={experiences} />
+            <div className="h-screen"></div>
+
+            {/* Text field and submit form */}
+            <div className="mt-8">
+                <form onSubmit={handleSubmit} className="flex flex-col items-center">
+                    <input
+                        type="text"
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        className="p-4 w-3/4 md:w-1/2 text-lg rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
+                        placeholder="Enter your text here"
+                    />
+                    <button
+                        type="submit"
+                        className="mt-4 px-6 py-3 text-lg font-bold text-white bg-gradient-to-r from-orange-500 to-red-800 rounded-lg hover:bg-gradient-to-l focus:ring-2 focus:ring-orange-500"
+                    >
+                        Submit
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+
+const SECTION_HEIGHT = 1500;
+
+const Hero = ({ experiences }: { experiences: Experience[] }) => {
+    return (
+        <div className="relative w-full" style={{ height: `calc(${SECTION_HEIGHT}px + 100vh)` }}>
+            <CenterCard />
+            <ParallaxCards experiences={experiences} />
+            <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-b from-zinc-950/0 to-zinc-950"></div>
+        </div>
+    );
+}
+
+const CenterCard = () => {
     const [firstName, setFirstName] = useState<string>("");
     const [lastName, setLastName] = useState<string>("");
     const [profilePicture, setProfilePicture] = useState<string>("");
-
     const [experiences, setExperiences] = useState<Experience[]>([]);
+    const [index, setIndex] = useState(0);
+
+
+
+    useEffect(() => {
+        getProfileInformation();
+        getUserExperiences();
+    }, [])
+
+    useEffect(() => {
+        if (!experiences || experiences.length === 0) return;
+
+        const interval = setInterval(() => {
+            setIndex((prevIndex) => (prevIndex + 1) % experiences.length);
+        }, 1500); // Change every 1.5 seconds
+
+        return () => clearInterval(interval); // Cleanup on unmount
+    }, [experiences]);
 
     const getProfileInformation = async () => {
         try {
@@ -115,50 +215,14 @@ export default function SmoothScroll() {
 
             setExperiences(data.current_experiences)
 
+            console.log("EXPERIENCES", experiences);
+
 
         } catch (error) {
             console.error("Error retrieving user experiences:", error);
         }
     }
 
-    useEffect(() => {
-        console.log('Updated experiences state:', experiences);
-      }, [experiences]);
-
-    useEffect(() => {
-        getProfileInformation();
-        getUserExperiences();
-    }, []);
-
-    return (
-        <div className="bg-gradient-to-b from-gray-900 to-black p-8 text-white">
-            {firstName && lastName && profilePicture && (
-                <div className="absolute top-8 right-8 flex items-center space-x-3 px-4 py-2 rounded-full bg-gradient-to-b from-gray-900 to-black text-white shadow-md hover:shadow-xl hover:bg-gradient-to-r from-orange-500 to-red-800 transition-all ease-in-out duration-300 transform hover:scale-105">
-                    <img src={profilePicture} alt="Profile" className="w-12 h-12 rounded-full border-2 border-white" />
-                    <div>
-                        <p className="font-semibold text-lg">{firstName} {lastName}</p>
-                    </div>
-                </div>
-            )}
-            <Hero experiences={experiences} />
-            <div className="h-screen"></div>
-        </div>
-    );
-}
-
-const SECTION_HEIGHT = 1500;
-
-const Hero = ({ experiences }: { experiences: Experience[] }) => {
-    return (
-        <div className="relative w-full" style={{ height: `calc(${SECTION_HEIGHT}px + 100vh)` }}>
-            <CenterCard />
-            <ParallaxCards experiences={experiences} />
-            <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-b from-zinc-950/0 to-zinc-950"></div>
-        </div>
-    );
-}
-
-const CenterCard = () => {
     const { scrollY } = useScroll();
 
     const opacity = useTransform(scrollY, [SECTION_HEIGHT, SECTION_HEIGHT + 500], [1, 0]);
@@ -166,24 +230,42 @@ const CenterCard = () => {
 
     return (
         <motion.div
-            className="sticky top-0 h-screen w-full flex justify-center items-center"
+            className="sticky top-0 min-h-screen w-full flex justify-center items-center"
             style={{
                 opacity,
                 backgroundSize,
             }}
         >
-            <div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center w-5/12">
+            <div className="flex flex-col items-center text-center">
+                {/* Profile Image */}
                 <img
-                    src={"https://randomuser.me/api/portraits/men/32.jpg"} // Replace with actual user image
+                    src={profilePicture}
                     alt="Profile"
-                    className="w-24 h-24 rounded-full border-4 border-gray-300 mb-4"
+                    className="w-32 h-32 rounded-full border-4 border-gray-300 mb-4"
                 />
-                <h2 className="text-2xl font-bold text-gray-800">Omar E</h2>
-                <p className="text-sm text-gray-500">Software Developer at XYZ</p>
-                <p className="text-xs text-gray-400 italic">Joined in 2023</p>
-                <p className="text-gray-700 mt-4 text-center">Passionate about technology, innovation, and helping others achieve their best work.</p>
+
+                {/* Name with Large, Bold Styling */}
+                <h2 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-wide leading-tight">
+                    {firstName} {lastName}
+                </h2>
+
+                {/* Rotating Position with Smooth Transition */}
+                <p className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-wide leading-tight mt-4">
+                    <motion.span
+                        key={index} // Forces animation on change
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.6, ease: "easeInOut" }}
+                        className="block bg-gradient-to-r from-orange-500 to-red-800 text-transparent bg-clip-text"
+                    >
+                        {experiences[index]?.position}
+                    </motion.span>
+                </p>
             </div>
         </motion.div>
+
+
     );
 }
 
@@ -201,7 +283,7 @@ const ParallaxCards = ({ experiences }: { experiences: Experience[] }) => {
                         start={randomStart}
                         end={randomEnd}
                         alt={`Card ${index + 1}`}
-                        className={`w-full md:w-1/3 lg:w-1/4`} 
+                        className={`w-full md:w-1/3 lg:w-1/4`}
                         experience={experience}
                     />
                 );
@@ -237,12 +319,12 @@ const ParallaxCard = ({
 
     return (
         <motion.div
-            className={`${className} bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center max-w-[15vw]`}
+            className={`${className} bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center max-w-[17vw]`}
             style={{ opacity, transform }}
             ref={ref}
         >
             <div className="h-14 bg-green-500 mb-4 rounded-full object-contain"></div>
-            <h3 className="text-xl font-bold text-gray-800">{experience.position}</h3>
+            <h3 className="text-xl font-bold text-gray-800 text-center">{experience.position}</h3>
             <p className="text-sm text-gray-500">{experience.company}</p>
             <p className="text-xs text-gray-400 italic">{experience.start_date} - {experience.end_date}</p>
             <p className="text-gray-600 text-sm mt-2 text-center">
